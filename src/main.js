@@ -1,7 +1,7 @@
 // Main application logic
 class MusicLinkConverter {
     constructor() {
-        this.currentPlatform = 'spotify';
+        this.currentPlatform = 'apple'; // Default: Spotify → Apple Music
         this.initializeEventListeners();
     }
 
@@ -67,17 +67,19 @@ class MusicLinkConverter {
         return new Promise((resolve) => {
             setTimeout(() => {
                 // Simulate API response
-                if (targetPlatform === 'spotify') {
-                    resolve({
-                        success: true,
-                        link: 'https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh',
-                        platform: 'Spotify'
-                    });
-                } else {
+                if (targetPlatform === 'apple') {
+                    // Converting TO Apple Music
                     resolve({
                         success: true,
                         link: 'https://music.apple.com/us/album/anti-hero/1646849437?i=1646849440',
                         platform: 'Apple Music'
+                    });
+                } else {
+                    // Converting TO Spotify
+                    resolve({
+                        success: true,
+                        link: 'https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh',
+                        platform: 'Spotify'
                     });
                 }
             }, 1500);
