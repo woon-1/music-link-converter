@@ -1,5 +1,5 @@
 // Music Link Converter API
-// This would be your serverless function for Vercel
+// Vercel serverless function
 
 export default async function handler(req, res) {
     // Set CORS headers
