@@ -1,0 +1,24 @@
+{
+  "name": "music-link-converter",
+  "version": "1.0.0",
+  "description": "Convert music links between Spotify and Apple Music",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "eslint": "^8.0.0"
+  },
+  "keywords": ["music", "spotify", "apple-music", "converter", "links"],
+  "author": "Your Name",
+  "license": "MIT"
+}

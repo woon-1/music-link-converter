@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/converter.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/converter",
+      "destination": "/api/converter.js"
+    }
+  ]
+}
