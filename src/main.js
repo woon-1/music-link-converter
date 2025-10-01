@@ -49,7 +49,7 @@ class MusicLinkConverter {
             const result = await this.fetchConvertedLink(url, this.currentPlatform);
             
             if (result.success) {
-                this.showSuccess(result.link, result.platform);
+                this.showSuccess(result.link, result.platform, result.confidence, result.track);
             } else {
                 this.showError(result.error || 'Failed to convert link');
             }
@@ -62,28 +62,27 @@ class MusicLinkConverter {
     }
 
     async fetchConvertedLink(url, targetPlatform) {
-        // For now, we'll simulate the conversion
-        // In a real implementation, this would call your API
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Simulate API response
-                if (targetPlatform === 'apple') {
-                    // Converting TO Apple Music
-                    resolve({
-                        success: true,
-                        link: 'https://music.apple.com/us/album/anti-hero/1646849437?i=1646849440',
-                        platform: 'Apple Music'
-                    });
-                } else {
-                    // Converting TO Spotify
-                    resolve({
-                        success: true,
-                        link: 'https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh',
-                        platform: 'Spotify'
-                    });
-                }
-            }, 1500);
-        });
+        try {
+            const response = await fetch('/api/converter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    targetPlatform: targetPlatform
+                })
+            });
+
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('API call failed:', error);
+            return {
+                success: false,
+                error: 'Network error. Please try again.'
+            };
+        }
     }
 
     isValidUrl(string) {
@@ -103,13 +102,24 @@ class MusicLinkConverter {
         convertBtn.disabled = show;
     }
 
-    showSuccess(link, platform) {
+    showSuccess(link, platform, confidence, track) {
         const result = document.getElementById('result');
         const resultText = document.getElementById('resultText');
         const resultLink = document.getElementById('resultLink');
         
         result.className = 'result success';
-        resultText.textContent = `✅ Successfully converted to ${platform}:`;
+        
+        let confidenceText = '';
+        if (confidence) {
+            confidenceText = ` (${Math.round(confidence)}% match)`;
+        }
+        
+        let trackInfo = '';
+        if (track) {
+            trackInfo = `\n🎵 ${track.title} by ${track.artist}`;
+        }
+        
+        resultText.textContent = `✅ Successfully converted to ${platform}${confidenceText}${trackInfo}`;
         resultLink.href = link;
         resultLink.textContent = link;
         result.style.display = 'block';

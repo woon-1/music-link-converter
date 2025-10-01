@@ -1,6 +1,8 @@
 // Music Link Converter API
 // Vercel serverless function
 
+import MusicConverter from '../src/services/music-converter.js';
+
 export default async function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,31 +27,22 @@ export default async function handler(req, res) {
             });
         }
 
-        // Extract metadata from the source URL
-        const metadata = extractMetadata(url);
-        
-        if (!metadata) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Invalid music URL format' 
-            });
-        }
+        // Initialize converter
+        const converter = new MusicConverter();
 
-        // Convert to target platform
-        const convertedLink = await convertToPlatform(metadata, targetPlatform);
+        // Perform conversion
+        const result = await converter.convert(url, targetPlatform);
 
-        if (!convertedLink) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Could not find matching track on target platform' 
-            });
+        if (!result.success) {
+            return res.status(404).json(result);
         }
 
         return res.status(200).json({
             success: true,
-            link: convertedLink,
-            platform: targetPlatform,
-            metadata: metadata
+            link: result.convertedUrl,
+            platform: result.targetPlatform,
+            confidence: result.confidence,
+            track: result.track
         });
 
     } catch (error) {
@@ -61,68 +54,3 @@ export default async function handler(req, res) {
     }
 }
 
-function extractMetadata(url) {
-    try {
-        const urlObj = new URL(url);
-        
-        // Spotify URL parsing
-        if (urlObj.hostname.includes('spotify.com')) {
-            const trackId = extractSpotifyTrackId(url);
-            if (trackId) {
-                return {
-                    platform: 'spotify',
-                    trackId: trackId,
-                    type: 'track'
-                };
-            }
-        }
-        
-        // Apple Music URL parsing
-        if (urlObj.hostname.includes('music.apple.com')) {
-            const trackId = extractAppleMusicTrackId(url);
-            if (trackId) {
-                return {
-                    platform: 'apple',
-                    trackId: trackId,
-                    type: 'track'
-                };
-            }
-        }
-        
-        return null;
-    } catch (error) {
-        return null;
-    }
-}
-
-function extractSpotifyTrackId(url) {
-    const match = url.match(/\/track\/([a-zA-Z0-9]+)/);
-    return match ? match[1] : null;
-}
-
-function extractAppleMusicTrackId(url) {
-    const match = url.match(/i=(\d+)/);
-    return match ? match[1] : null;
-}
-
-async function convertToPlatform(metadata, targetPlatform) {
-    // This is where you'd implement the actual conversion logic
-    // For now, we'll return a mock response
-    
-    if (metadata.platform === targetPlatform) {
-        return null; // Already on target platform
-    }
-    
-    // Mock conversion - in reality, you'd:
-    // 1. Fetch track details from source platform API
-    // 2. Search for matching track on target platform
-    // 3. Return the best match URL
-    
-    if (targetPlatform === 'spotify') {
-        return 'https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh';
-    } else if (targetPlatform === 'apple') {
-        return 'https://music.apple.com/us/album/anti-hero/1646849437?i=1646849440';
-    }
-    
-    return null;
-}
