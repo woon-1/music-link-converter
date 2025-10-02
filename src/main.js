@@ -74,11 +74,16 @@ class MusicLinkConverter {
         const inputWrapper = document.querySelector('.input-wrapper');
 
         const checkOverflow = () => {
-            // Check if text is overflowing AND not scrolled to the end
+            // Check if text is overflowing
             const isOverflowing = musicUrl.scrollWidth > musicUrl.clientWidth;
             const isAtEnd = musicUrl.scrollLeft + musicUrl.clientWidth >= musicUrl.scrollWidth - 1;
+            const isFocused = document.activeElement === musicUrl;
             
-            if (isOverflowing && !isAtEnd) {
+            // On desktop: hide gradient when at end
+            // On mobile or when unfocused: always show gradient if overflowing
+            const isMobile = window.innerWidth <= 600;
+            
+            if (isOverflowing && (!isAtEnd || isMobile || !isFocused)) {
                 inputWrapper.classList.add('has-overflow');
             } else {
                 inputWrapper.classList.remove('has-overflow');

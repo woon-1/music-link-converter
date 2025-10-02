@@ -201,6 +201,13 @@
             opacity: 1;
         }
 
+        /* On mobile, always show gradient when there's overflow */
+        @media (max-width: 600px) {
+            .input-wrapper.has-overflow::after {
+                opacity: 1 !important;
+            }
+        }
+
         input[type="url"] {
             width: 100%;
             padding: 18px 50px 18px 24px;
