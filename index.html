@@ -157,10 +157,24 @@
         .shape {
             width: 28px;
             height: 28px;
-            background: #fff;
-            transform: rotate(45deg);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            border-right-color: transparent;
+            position: relative;
             transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border-radius: 4px;
+        }
+
+        .shape::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #fff;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
         }
 
         .result {
