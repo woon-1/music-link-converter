@@ -99,14 +99,14 @@
             transform: translateX(-50%);
             margin-top: 8px;
             background: #fff;
-            border: 2px solid #000;
+            border: 1px solid #ddd;
             border-radius: 16px;
             padding: 12px;
             display: none;
             flex-direction: column;
             gap: 8px;
             z-index: 1000;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
         .platform-menu.active {
@@ -123,12 +123,12 @@
             border-radius: 12px;
             transition: all 0.2s ease;
             background: transparent;
-            border: 2px solid transparent;
+            border: 1px solid transparent;
         }
 
         .platform-option:hover {
             background: transparent;
-            border-color: #000;
+            border-color: #ccc;
             transform: scale(1.05);
         }
 
@@ -145,13 +145,13 @@
             background: #f5f5f5;
             border-radius: 16px;
             padding: 8px 12px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
             transition: all 0.3s ease;
             cursor: pointer;
         }
 
         .arrows-container:hover {
-            border-color: #000;
+            border-color: #999;
             background: #fafafa;
         }
 
@@ -211,7 +211,7 @@
         input[type="url"] {
             width: 100%;
             padding: 18px 50px 18px 24px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
             border-radius: 20px;
             font-size: 15px;
             font-family: 'Inter', sans-serif;
@@ -223,9 +223,9 @@
 
         input[type="url"]:focus {
             outline: none;
-            border-color: #000;
+            border-color: #999;
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
 
         input[type="url"]:focus ~ .clear-btn {
@@ -410,7 +410,7 @@
             position: absolute;
             width: 12px;
             height: 12px;
-            border: 2px solid #000;
+            border: 1px solid #000;
             border-radius: 3px;
             transition: all 0.3s ease;
         }
@@ -432,11 +432,13 @@
         /* Checkmark for copied state */
         .copy-icon.copied::before {
             border: none;
-            width: 6px;
-            height: 12px;
-            border-right: 2px solid #000;
-            border-bottom: 2px solid #000;
-            transform: rotate(45deg) translate(2px, -2px);
+            width: 3px;
+            height: 8px;
+            border-right: 1.5px solid #000;
+            border-bottom: 1.5px solid #000;
+            transform: rotate(45deg);
+            top: 5px;
+            left: 7px;
         }
 
         .copy-icon.copied::after {
