@@ -155,7 +155,7 @@ class MusicLinkConverter {
         resultText.textContent = trackInfo;
         resultLink.href = link;
         resultLink.textContent = link;
-        copyBtn.style.display = 'inline-block';
+        copyBtn.style.display = 'block';
         result.style.display = 'block';
         
         // Store the link for copying

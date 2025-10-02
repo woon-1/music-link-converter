@@ -215,7 +215,7 @@
         }
 
         .result-link {
-            display: inline-block;
+            display: block;
             margin-top: 8px;
             color: #000;
             text-decoration: underline;
@@ -233,15 +233,15 @@
         }
 
         .copy-btn {
-            display: inline-block;
-            margin-left: 32px;
+            display: block;
+            margin: 8px auto 0;
             padding: 0;
             background: none;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            vertical-align: middle;
             position: relative;
+            width: 20px;
         }
 
         .copy-btn:hover {
@@ -411,12 +411,10 @@
         
         <div class="result" id="result">
             <p id="resultText"></p>
-            <div>
-                <a href="#" id="resultLink" class="result-link" target="_blank"></a>
-                <button class="copy-btn" id="copyBtn" style="display: none;">
-                    <span class="copy-icon" id="copyIcon"></span>
-                </button>
-            </div>
+            <a href="#" id="resultLink" class="result-link" target="_blank"></a>
+            <button class="copy-btn" id="copyBtn" style="display: none;">
+                <span class="copy-icon" id="copyIcon"></span>
+            </button>
         </div>
     </div>
 
