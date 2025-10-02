@@ -537,10 +537,17 @@ class MusicConverter {
     // Convert to Tidal from any platform
     async convertToTidal(sourceUrl, sourcePlatform) {
         try {
-            let searchQuery = '';
-            let sourceTrack = null;
+            // Use SongLink API to get Tidal link
+            const songLinkData = await this.songlink.getLinks(sourceUrl);
+            const tidalUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'tidal');
 
-            // Get track info from source
+            if (!tidalUrl) {
+                throw new Error('Tidal link not available for this track');
+            }
+
+            // Get track info for display
+            let sourceTrack = { title: '', artist: '', album: '' };
+            
             if (sourcePlatform === 'spotify') {
                 const trackId = SpotifyAPI.extractTrackId(sourceUrl);
                 const spotifyTrack = await this.spotify.getTrack(trackId);
@@ -554,8 +561,6 @@ class MusicConverter {
                 const youtubeVideo = await this.youtube.getVideo(videoId);
                 sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
             } else if (sourcePlatform === 'amazon') {
-                // For Amazon, use SongLink to get track info first
-                const songLinkData = await this.songlink.getLinks(sourceUrl);
                 const spotifyUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
                 if (spotifyUrl) {
                     const trackId = SpotifyAPI.extractTrackId(spotifyUrl);
@@ -564,43 +569,17 @@ class MusicConverter {
                 }
             }
 
-            searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
-            const tidalResults = await this.tidal.searchTracks(searchQuery, 20);
-
-            if (tidalResults.length === 0) {
-                throw new Error('No matching track found on Tidal');
-            }
-
-            let bestMatch = null;
-            let bestScore = 0;
-
-            for (const tidalTrack of tidalResults) {
-                const normalized = this.normalizeTrackData(tidalTrack, 'tidal');
-                const score = this.calculateSimilarity(sourceTrack, normalized);
-                
-                if (score > bestScore && score > 60) {
-                    bestScore = score;
-                    bestMatch = tidalTrack;
-                }
-            }
-
-            if (!bestMatch) {
-                throw new Error('No sufficiently similar track found on Tidal');
-            }
-
-            const tidalUrl = TidalAPI.generateUrl(bestMatch.id);
-
             return {
                 success: true,
                 originalUrl: sourceUrl,
                 convertedUrl: tidalUrl,
                 originalPlatform: sourcePlatform,
                 targetPlatform: 'Tidal',
-                confidence: bestScore,
+                confidence: 95,
                 track: {
-                    title: sourceTrack.title,
-                    artist: sourceTrack.artist,
-                    album: sourceTrack.album
+                    title: sourceTrack.title || 'Unknown',
+                    artist: sourceTrack.artist || 'Unknown',
+                    album: sourceTrack.album || 'Unknown'
                 }
             };
 
@@ -615,6 +594,67 @@ class MusicConverter {
 
     // Convert from Tidal to other platforms
     async convertFromTidal(tidalUrl, targetPlatform) {
+        try {
+            // Use SongLink API to get target platform link
+            const songLinkData = await this.songlink.getLinks(tidalUrl);
+            
+            let targetUrl = null;
+            if (targetPlatform === 'spotify') {
+                targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
+            } else if (targetPlatform === 'apple') {
+                targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'appleMusic');
+            } else if (targetPlatform === 'youtube') {
+                targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'youtube');
+            } else if (targetPlatform === 'youtubeMusic') {
+                targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'youtubeMusic');
+            } else if (targetPlatform === 'amazon') {
+                targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'amazonMusic');
+            }
+            
+            if (!targetUrl) {
+                throw new Error(`${this.getPlatformName(targetPlatform)} link not available for this track`);
+            }
+
+            // Get track info for display from Spotify link (most reliable)
+            const spotifyUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
+            let trackInfo = { title: 'Unknown', artist: 'Unknown', album: 'Unknown' };
+            
+            if (spotifyUrl) {
+                try {
+                    const trackId = SpotifyAPI.extractTrackId(spotifyUrl);
+                    const spotifyTrack = await this.spotify.getTrack(trackId);
+                    const normalized = this.normalizeTrackData(spotifyTrack, 'spotify');
+                    trackInfo = {
+                        title: normalized.title,
+                        artist: normalized.artist,
+                        album: normalized.album
+                    };
+                } catch (e) {
+                    console.error('Could not fetch track info:', e);
+                }
+            }
+            
+            return {
+                success: true,
+                originalUrl: tidalUrl,
+                convertedUrl: targetUrl,
+                originalPlatform: 'Tidal',
+                targetPlatform: this.getPlatformName(targetPlatform),
+                confidence: 95,
+                track: trackInfo
+            };
+
+        } catch (error) {
+            console.error('Convert from Tidal error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Old complex implementation - keeping for reference
+    async convertFromTidalOld(tidalUrl, targetPlatform) {
         try {
             const trackId = TidalAPI.extractTrackId(tidalUrl);
             const tidalTrack = await this.tidal.getTrack(trackId);
