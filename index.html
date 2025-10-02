@@ -67,20 +67,21 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            border: none;
+            border: 1px solid #f5f5f5;
             transition: all 0.3s ease;
             background: transparent;
             position: relative;
             transform: translate3d(0, 0, 0);
             backface-visibility: hidden;
-            overflow: hidden;
         }
 
         .logo-selector:hover .logo-display {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-color: #ccc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .logo-selector:active .logo-display {
+            border-color: #999;
             transform: translate3d(0, 0, 0) scale(0.98);
         }
 
@@ -428,20 +429,27 @@
             transform: translate(2px, 2px);
         }
 
-        /* Checkmark for copied state */
+        /* Checkmark for copied state - simple angular V shape */
         .copy-icon.copied::before {
-            border: none;
-            width: 5px;
-            height: 10px;
-            border-right: 2px solid #000;
-            border-bottom: 2px solid #000;
-            transform: rotate(45deg);
-            top: 3px;
-            left: 6px;
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 2px;
+            background: #000;
+            transform: rotate(-45deg);
+            top: 9px;
+            left: 5px;
         }
 
         .copy-icon.copied::after {
-            display: none;
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 2px;
+            background: #000;
+            transform: rotate(45deg);
+            top: 8px;
+            left: 8px;
         }
 
         .loading {
