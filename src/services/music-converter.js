@@ -55,10 +55,10 @@ class MusicConverter {
             };
         } else if (platform === 'tidal') {
             return {
-                title: track.attributes?.title || track.title,
-                artist: track.relationships?.artists?.data?.[0]?.attributes?.name || track.artist,
-                album: track.relationships?.albums?.data?.[0]?.attributes?.title || track.album,
-                duration: track.attributes?.duration ? track.attributes.duration * 1000 : null,
+                title: track.title || track.name,
+                artist: track.artist?.name || track.artists?.[0]?.name || track.artist,
+                album: track.album?.title || track.album?.name || track.albumName,
+                duration: track.duration ? track.duration * 1000 : track.durationMs,
                 platform: 'tidal',
                 id: track.id
             };

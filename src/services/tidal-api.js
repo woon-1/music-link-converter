@@ -76,24 +76,24 @@ class TidalAPI {
             const params = new URLSearchParams({
                 query: query,
                 limit: limit,
-                countryCode: 'US',
-                type: 'TRACKS'
+                countryCode: 'US'
             });
 
-            const response = await fetch(`${this.baseUrl}/v2/search?${params}`, {
+            const response = await fetch(`${this.baseUrl}/v1/search/tracks?${params}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/vnd.api+json'
+                    'Accept': 'application/vnd.tidal.v1+json'
                 }
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.errors?.[0]?.detail || 'Tidal API request failed');
+                const errorText = await response.text();
+                console.error('Tidal search response:', errorText);
+                throw new Error(`Tidal search failed: ${response.status}`);
             }
 
             const data = await response.json();
-            return data.data || [];
+            return data.tracks?.items || data.items || [];
 
         } catch (error) {
             console.error('Tidal search error:', error);
@@ -106,20 +106,21 @@ class TidalAPI {
         try {
             const token = await this.getAccessToken();
 
-            const response = await fetch(`${this.baseUrl}/v2/tracks/${trackId}?countryCode=US`, {
+            const response = await fetch(`${this.baseUrl}/v1/tracks/${trackId}?countryCode=US`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/vnd.api+json'
+                    'Accept': 'application/vnd.tidal.v1+json'
                 }
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.errors?.[0]?.detail || 'Track not found');
+                const errorText = await response.text();
+                console.error('Tidal get track response:', errorText);
+                throw new Error(`Track not found: ${response.status}`);
             }
 
             const data = await response.json();
-            return data.data;
+            return data;
 
         } catch (error) {
             console.error('Tidal get track error:', error);
