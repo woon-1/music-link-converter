@@ -65,12 +65,12 @@ class MusicLinkConverter {
         const url = document.getElementById('musicUrl').value.trim();
         
         if (!url) {
-            this.showError('Please enter a music link');
+            this.showError('enter a link, dummy');
             return;
         }
 
         if (!this.isValidUrl(url)) {
-            this.showError('Please enter a valid URL');
+            this.showError('that\'s not a valid link, dummy');
             return;
         }
 
