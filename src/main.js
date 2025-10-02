@@ -177,14 +177,14 @@ class MusicLinkConverter {
     }
 
     async copyToClipboard() {
-        const copyBtn = document.getElementById('copyBtn');
+        const copyIcon = document.getElementById('copyIcon');
         
         try {
             await navigator.clipboard.writeText(this.currentLink);
-            // Brief visual feedback
-            copyBtn.textContent = '✓';
+            // Brief visual feedback - show checkmark
+            copyIcon.classList.add('copied');
             setTimeout(() => {
-                copyBtn.textContent = '📋';
+                copyIcon.classList.remove('copied');
             }, 1000);
         } catch (err) {
             console.error('Failed to copy:', err);

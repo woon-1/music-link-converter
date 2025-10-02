@@ -232,28 +232,70 @@
         .copy-btn {
             display: inline-block;
             margin-left: 12px;
-            padding: 8px 12px;
+            padding: 10px 14px;
             background: #000;
-            color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             vertical-align: middle;
+            position: relative;
         }
 
         .copy-btn:hover {
             background: #333;
-            transform: scale(1.05);
+            transform: translateY(-2px);
         }
 
         .copy-btn:active {
-            transform: scale(0.95);
+            transform: translateY(0);
         }
 
-        .copy-btn.copied {
-            background: #000;
+        .copy-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Two overlapping squares representing copy/duplicate */
+        .copy-icon::before,
+        .copy-icon::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #fff;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-icon::before {
+            top: 0;
+            left: 0;
+        }
+
+        .copy-icon::after {
+            bottom: 0;
+            right: 0;
+        }
+
+        .copy-btn:hover .copy-icon::after {
+            transform: translate(2px, 2px);
+        }
+
+        /* Checkmark for copied state */
+        .copy-icon.copied::before {
+            border: none;
+            width: 6px;
+            height: 12px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(45deg) translate(2px, -2px);
+        }
+
+        .copy-icon.copied::after {
+            display: none;
         }
 
         .loading {
@@ -370,7 +412,9 @@
             <p id="resultText"></p>
             <div>
                 <a href="#" id="resultLink" class="result-link" target="_blank"></a>
-                <button class="copy-btn" id="copyBtn" style="display: none;">📋</button>
+                <button class="copy-btn" id="copyBtn" style="display: none;">
+                    <span class="copy-icon" id="copyIcon"></span>
+                </button>
             </div>
         </div>
     </div>
