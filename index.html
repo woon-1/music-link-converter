@@ -229,6 +229,33 @@
             color: #666;
         }
 
+        .copy-btn {
+            display: inline-block;
+            margin-left: 12px;
+            padding: 8px 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            vertical-align: middle;
+        }
+
+        .copy-btn:hover {
+            background: #333;
+            transform: scale(1.05);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn.copied {
+            background: #000;
+        }
+
         .loading {
             display: none;
             margin-top: 24px;
@@ -341,7 +368,10 @@
         
         <div class="result" id="result">
             <p id="resultText"></p>
-            <a href="#" id="resultLink" class="result-link" target="_blank"></a>
+            <div>
+                <a href="#" id="resultLink" class="result-link" target="_blank"></a>
+                <button class="copy-btn" id="copyBtn" style="display: none;">📋</button>
+            </div>
         </div>
     </div>
 

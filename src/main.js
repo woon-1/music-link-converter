@@ -34,6 +34,11 @@ class MusicLinkConverter {
                 this.convertLink();
             }
         });
+
+        // Copy button
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            this.copyToClipboard();
+        });
     }
 
     toggleDirection() {
@@ -138,6 +143,7 @@ class MusicLinkConverter {
         const result = document.getElementById('result');
         const resultText = document.getElementById('resultText');
         const resultLink = document.getElementById('resultLink');
+        const copyBtn = document.getElementById('copyBtn');
         
         result.className = 'result success';
         
@@ -149,23 +155,46 @@ class MusicLinkConverter {
         resultText.textContent = `${trackInfo}✓ Link ready`;
         resultLink.href = link;
         resultLink.textContent = link;
+        copyBtn.style.display = 'inline-block';
         result.style.display = 'block';
+        
+        // Store the link for copying
+        this.currentLink = link;
     }
 
     showError(message) {
         const result = document.getElementById('result');
         const resultText = document.getElementById('resultText');
         const resultLink = document.getElementById('resultLink');
+        const copyBtn = document.getElementById('copyBtn');
         
         result.className = 'result error';
         resultText.textContent = `✗ ${message}`;
         resultLink.href = '#';
         resultLink.textContent = '';
+        copyBtn.style.display = 'none';
         result.style.display = 'block';
     }
 
+    async copyToClipboard() {
+        const copyBtn = document.getElementById('copyBtn');
+        
+        try {
+            await navigator.clipboard.writeText(this.currentLink);
+            // Brief visual feedback
+            copyBtn.textContent = '✓';
+            setTimeout(() => {
+                copyBtn.textContent = '📋';
+            }, 1000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    }
+
     clearResult() {
+        const copyBtn = document.getElementById('copyBtn');
         document.getElementById('result').style.display = 'none';
+        copyBtn.style.display = 'none';
     }
 }
 
