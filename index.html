@@ -15,7 +15,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #fff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -30,7 +30,6 @@
             max-width: 420px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .platform-selector {
@@ -62,27 +61,38 @@
         .arrows-container {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            position: relative;
+            gap: 2px;
+            background: #f5f5f5;
+            border-radius: 16px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .arrows-container:hover {
+            border-color: #000;
+            background: #fafafa;
         }
 
         .arrow-btn {
             background: none;
             border: none;
             cursor: pointer;
-            padding: 8px;
+            padding: 6px;
             transition: all 0.3s ease;
-            font-size: 24px;
+            font-size: 20px;
             line-height: 1;
-            color: #ddd;
+            color: #d0d0d0;
+            border-radius: 8px;
         }
 
         .arrow-btn:hover {
-            transform: scale(1.1);
+            background: #fff;
         }
 
         .arrow-btn.active {
             color: #000;
+            font-weight: bold;
         }
 
         .arrow-btn.top {
@@ -100,7 +110,7 @@
         input[type="url"] {
             width: 100%;
             padding: 18px 24px;
-            border: 2px solid #f0f0f0;
+            border: 2px solid #e0e0e0;
             border-radius: 20px;
             font-size: 15px;
             font-family: 'Inter', sans-serif;
@@ -115,7 +125,7 @@
             outline: none;
             border-color: #000;
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
         }
 
         input[type="url"]::placeholder {
@@ -125,26 +135,27 @@
 
         .convert-btn {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            background: #000;
             color: #fff;
             border: none;
             border-radius: 20px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 32px;
+            font-weight: 400;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: 'Inter', sans-serif;
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            line-height: 1;
         }
 
         .convert-btn:hover {
+            background: #333;
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
         }
 
         .convert-btn:active {
             transform: translateY(0);
+            background: #000;
         }
 
         .result {
@@ -156,21 +167,21 @@
         }
 
         .result.success {
-            background: #f0fdf4;
-            border: 2px solid #86efac;
-            color: #166534;
+            background: #fafafa;
+            border: 2px solid #000;
+            color: #000;
         }
 
         .result.error {
-            background: #fef2f2;
-            border: 2px solid #fca5a5;
-            color: #991b1b;
+            background: #fafafa;
+            border: 2px solid #000;
+            color: #000;
         }
 
         .result-link {
             display: block;
             margin-top: 12px;
-            color: #059669;
+            color: #000;
             text-decoration: none;
             word-break: break-all;
             font-size: 13px;
@@ -189,7 +200,7 @@
 
         .spinner {
             border: 3px solid #f0f0f0;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #000;
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -283,7 +294,7 @@
         <div class="input-section">
             <input type="url" id="musicUrl" placeholder="Paste link here..." />
             
-            <button class="convert-btn" id="convertBtn">Convert →</button>
+            <button class="convert-btn" id="convertBtn">⇄</button>
         </div>
         
         <div class="loading" id="loading">
