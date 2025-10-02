@@ -3,7 +3,7 @@ class TidalAPI {
     constructor() {
         this.clientId = process.env.TIDAL_CLIENT_ID;
         this.clientSecret = process.env.TIDAL_CLIENT_SECRET;
-        this.baseUrl = 'https://api.tidal.com/v2';
+        this.baseUrl = 'https://api.tidal.com/v1';
         this.accessToken = null;
         this.tokenExpiry = null;
     }
@@ -82,8 +82,7 @@ class TidalAPI {
 
             const response = await fetch(`${this.baseUrl}/search/tracks?${params}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.tidal.v1+json'
+                    'x-tidal-token': token
                 }
             });
 
@@ -114,8 +113,7 @@ class TidalAPI {
 
             const response = await fetch(`${this.baseUrl}/tracks/${trackId}?${params}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.tidal.v1+json'
+                    'x-tidal-token': token
                 }
             });
 
