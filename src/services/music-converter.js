@@ -3,6 +3,7 @@ import SpotifyAPI from './spotify-api.js';
 import AppleMusicAPI from './apple-music-api.js';
 import YouTubeAPI from './youtube-api.js';
 import SongLinkAPI from './songlink-api.js';
+import TidalAPI from './tidal-api.js';
 
 class MusicConverter {
     constructor() {
@@ -10,6 +11,7 @@ class MusicConverter {
         this.appleMusic = new AppleMusicAPI();
         this.youtube = new YouTubeAPI();
         this.songlink = new SongLinkAPI();
+        this.tidal = new TidalAPI();
     }
 
     // Normalize track data for comparison
@@ -50,6 +52,15 @@ class MusicConverter {
                 duration: track.durationMs || track.duration,
                 platform: 'amazon',
                 id: track.id || track.asin
+            };
+        } else if (platform === 'tidal') {
+            return {
+                title: track.attributes?.title || track.title,
+                artist: track.relationships?.artists?.data?.[0]?.attributes?.name || track.artist,
+                album: track.relationships?.albums?.data?.[0]?.attributes?.title || track.album,
+                duration: track.attributes?.duration ? track.attributes.duration * 1000 : null,
+                platform: 'tidal',
+                id: track.id
             };
         }
         return null;
@@ -523,6 +534,223 @@ class MusicConverter {
         }
     }
 
+    // Convert to Tidal from any platform
+    async convertToTidal(sourceUrl, sourcePlatform) {
+        try {
+            let searchQuery = '';
+            let sourceTrack = null;
+
+            // Get track info from source
+            if (sourcePlatform === 'spotify') {
+                const trackId = SpotifyAPI.extractTrackId(sourceUrl);
+                const spotifyTrack = await this.spotify.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+            } else if (sourcePlatform === 'apple') {
+                const trackId = AppleMusicAPI.extractTrackId(sourceUrl);
+                const appleTrack = await this.appleMusic.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(appleTrack, 'apple');
+            } else if (sourcePlatform === 'youtube' || sourcePlatform === 'youtubeMusic') {
+                const videoId = YouTubeAPI.extractVideoId(sourceUrl);
+                const youtubeVideo = await this.youtube.getVideo(videoId);
+                sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
+            } else if (sourcePlatform === 'amazon') {
+                // For Amazon, use SongLink to get track info first
+                const songLinkData = await this.songlink.getLinks(sourceUrl);
+                const spotifyUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
+                if (spotifyUrl) {
+                    const trackId = SpotifyAPI.extractTrackId(spotifyUrl);
+                    const spotifyTrack = await this.spotify.getTrack(trackId);
+                    sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+                }
+            }
+
+            searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            const tidalResults = await this.tidal.searchTracks(searchQuery, 20);
+
+            if (tidalResults.length === 0) {
+                throw new Error('No matching track found on Tidal');
+            }
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const tidalTrack of tidalResults) {
+                const normalized = this.normalizeTrackData(tidalTrack, 'tidal');
+                const score = this.calculateSimilarity(sourceTrack, normalized);
+                
+                if (score > bestScore && score > 60) {
+                    bestScore = score;
+                    bestMatch = tidalTrack;
+                }
+            }
+
+            if (!bestMatch) {
+                throw new Error('No sufficiently similar track found on Tidal');
+            }
+
+            const tidalUrl = TidalAPI.generateUrl(bestMatch.id);
+
+            return {
+                success: true,
+                originalUrl: sourceUrl,
+                convertedUrl: tidalUrl,
+                originalPlatform: sourcePlatform,
+                targetPlatform: 'Tidal',
+                confidence: bestScore,
+                track: {
+                    title: sourceTrack.title,
+                    artist: sourceTrack.artist,
+                    album: sourceTrack.album
+                }
+            };
+
+        } catch (error) {
+            console.error('Convert to Tidal error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Convert from Tidal to other platforms
+    async convertFromTidal(tidalUrl, targetPlatform) {
+        try {
+            const trackId = TidalAPI.extractTrackId(tidalUrl);
+            const tidalTrack = await this.tidal.getTrack(trackId);
+            const sourceTrack = this.normalizeTrackData(tidalTrack, 'tidal');
+
+            const searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            let targetResults = [];
+            let bestMatch = null;
+            let bestScore = 0;
+
+            if (targetPlatform === 'spotify') {
+                targetResults = await this.spotify.searchTracks(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'spotify');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Spotify');
+                }
+
+                return {
+                    success: true,
+                    originalUrl: tidalUrl,
+                    convertedUrl: SpotifyAPI.generateUrl(bestMatch.id),
+                    originalPlatform: 'Tidal',
+                    targetPlatform: 'Spotify',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'apple') {
+                targetResults = await this.appleMusic.searchSongs(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'apple');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Apple Music');
+                }
+
+                const albumId = bestMatch.attributes?.albumId || bestMatch.relationships?.albums?.data?.[0]?.id;
+                return {
+                    success: true,
+                    originalUrl: tidalUrl,
+                    convertedUrl: AppleMusicAPI.generateUrlWithAlbum(bestMatch.id, albumId, 'us'),
+                    originalPlatform: 'Tidal',
+                    targetPlatform: 'Apple Music',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'youtube' || targetPlatform === 'youtubeMusic') {
+                targetResults = await this.youtube.searchVideos(searchQuery, 20);
+                
+                for (const video of targetResults) {
+                    const normalized = this.normalizeTrackData(video, targetPlatform);
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = video;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error(`No sufficiently similar track found on ${targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube'}`);
+                }
+
+                return {
+                    success: true,
+                    originalUrl: tidalUrl,
+                    convertedUrl: YouTubeAPI.generateUrl(bestMatch.id, targetPlatform === 'youtubeMusic'),
+                    originalPlatform: 'Tidal',
+                    targetPlatform: targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            } else if (targetPlatform === 'amazon') {
+                // Use SongLink for Tidal → Amazon
+                const songLinkData = await this.songlink.getLinks(tidalUrl);
+                const amazonUrl = SongLinkAPI.extractAmazonLink(songLinkData);
+
+                if (!amazonUrl) {
+                    throw new Error('No Amazon Music link found for this track');
+                }
+
+                return {
+                    success: true,
+                    originalUrl: tidalUrl,
+                    convertedUrl: amazonUrl,
+                    originalPlatform: 'Tidal',
+                    targetPlatform: 'Amazon Music',
+                    confidence: 95,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            }
+
+        } catch (error) {
+            console.error('Convert from Tidal error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
     // Helper to get platform display name
     getPlatformName(platform) {
         const names = {
@@ -530,7 +758,8 @@ class MusicConverter {
             'apple': 'Apple Music',
             'youtube': 'YouTube',
             'youtubeMusic': 'YouTube Music',
-            'amazon': 'Amazon Music'
+            'amazon': 'Amazon Music',
+            'tidal': 'Tidal'
         };
         return names[platform] || platform;
     }
@@ -547,6 +776,16 @@ class MusicConverter {
 
             if (sourcePlatform === targetPlatform) {
                 throw new Error('Source and target platforms are the same');
+            }
+
+            // Handle conversions TO Tidal
+            if (targetPlatform === 'tidal') {
+                return await this.convertToTidal(url, sourcePlatform);
+            }
+
+            // Handle conversions FROM Tidal
+            if (sourcePlatform === 'tidal') {
+                return await this.convertFromTidal(url, targetPlatform);
             }
 
             // Handle conversions TO Amazon Music
@@ -600,6 +839,8 @@ class MusicConverter {
             return 'youtube';
         } else if (url.includes('music.amazon.com') || url.includes('amazon.com/music')) {
             return 'amazon';
+        } else if (url.includes('tidal.com') || url.includes('listen.tidal.com')) {
+            return 'tidal';
         }
         return null;
     }
