@@ -7,8 +7,9 @@ class MusicLinkConverter {
             'youtube': '/YouTube_icon.svg',
             'youtubeMusic': '/YouTube_Music_icon.svg'
         };
-        this.sourcePlatform = 'spotify';
-        this.targetPlatform = 'apple';
+        this.leftPlatform = 'spotify';
+        this.rightPlatform = 'apple';
+        this.direction = 'right'; // 'right' = left→right, 'left' = right→left
         this.initializeEventListeners();
     }
 
@@ -16,19 +17,19 @@ class MusicLinkConverter {
         // Logo dropdown toggles
         document.querySelector('[data-type="source"]').addEventListener('click', (e) => {
             e.stopPropagation();
-            this.toggleMenu('source');
+            this.toggleMenu('left');
         });
 
         document.querySelector('[data-type="target"]').addEventListener('click', (e) => {
             e.stopPropagation();
-            this.toggleMenu('target');
+            this.toggleMenu('right');
         });
 
         // Platform option clicks
         document.querySelectorAll('#sourceMenu .platform-option').forEach(option => {
             option.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.selectPlatform('source', option.dataset.platform);
+                this.selectPlatform('left', option.dataset.platform);
                 this.closeAllMenus();
             });
         });
@@ -36,7 +37,7 @@ class MusicLinkConverter {
         document.querySelectorAll('#targetMenu .platform-option').forEach(option => {
             option.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.selectPlatform('target', option.dataset.platform);
+                this.selectPlatform('right', option.dataset.platform);
                 this.closeAllMenus();
             });
         });
@@ -50,14 +51,14 @@ class MusicLinkConverter {
         const directionToggle = document.getElementById('directionToggle');
         directionToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.swapPlatforms();
+            this.toggleDirection();
         });
 
         // Keyboard support for direction toggle
         directionToggle.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                this.swapPlatforms();
+                this.toggleDirection();
             }
         });
 
@@ -122,9 +123,9 @@ class MusicLinkConverter {
         });
     }
 
-    toggleMenu(type) {
-        const menu = document.getElementById(type === 'source' ? 'sourceMenu' : 'targetMenu');
-        const otherMenu = document.getElementById(type === 'source' ? 'targetMenu' : 'sourceMenu');
+    toggleMenu(side) {
+        const menu = document.getElementById(side === 'left' ? 'sourceMenu' : 'targetMenu');
+        const otherMenu = document.getElementById(side === 'left' ? 'targetMenu' : 'sourceMenu');
         
         // Close other menu
         otherMenu.classList.remove('active');
@@ -138,26 +139,38 @@ class MusicLinkConverter {
         document.getElementById('targetMenu').classList.remove('active');
     }
 
-    selectPlatform(type, platform) {
-        if (type === 'source') {
-            this.sourcePlatform = platform;
+    selectPlatform(side, platform) {
+        if (side === 'left') {
+            this.leftPlatform = platform;
             document.getElementById('sourceLogoImg').src = this.platformLogos[platform];
         } else {
-            this.targetPlatform = platform;
+            this.rightPlatform = platform;
             document.getElementById('targetLogoImg').src = this.platformLogos[platform];
         }
         this.clearResult();
     }
 
-    swapPlatforms() {
-        // Swap platforms
-        const temp = this.sourcePlatform;
-        this.sourcePlatform = this.targetPlatform;
-        this.targetPlatform = temp;
+    toggleDirection() {
+        const rightArrow = document.getElementById('rightArrow');
+        const leftArrow = document.getElementById('leftArrow');
 
-        // Update logos
-        document.getElementById('sourceLogoImg').src = this.platformLogos[this.sourcePlatform];
-        document.getElementById('targetLogoImg').src = this.platformLogos[this.targetPlatform];
+        // Toggle direction
+        this.direction = this.direction === 'right' ? 'left' : 'right';
+
+        // Toggle arrow styles
+        if (this.direction === 'right') {
+            // Left → Right
+            rightArrow.classList.remove('inactive');
+            rightArrow.classList.add('active');
+            leftArrow.classList.remove('active');
+            leftArrow.classList.add('inactive');
+        } else {
+            // Right → Left
+            leftArrow.classList.remove('inactive');
+            leftArrow.classList.add('active');
+            rightArrow.classList.remove('active');
+            rightArrow.classList.add('inactive');
+        }
 
         this.clearResult();
     }
@@ -175,11 +188,15 @@ class MusicLinkConverter {
             return;
         }
 
+        // Determine source and target based on arrow direction
+        const sourcePlatform = this.direction === 'right' ? this.leftPlatform : this.rightPlatform;
+        const targetPlatform = this.direction === 'right' ? this.rightPlatform : this.leftPlatform;
+
         this.showLoading(true);
         this.clearResult();
 
         try {
-            const result = await this.fetchConvertedLink(url, this.targetPlatform);
+            const result = await this.fetchConvertedLink(url, targetPlatform);
             
             if (result.success) {
                 this.showSuccess(result.link, result.platform, result.confidence, result.track);
