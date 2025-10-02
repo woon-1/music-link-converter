@@ -165,8 +165,12 @@ class MusicConverter {
     async convertAppleToSpotify(appleUrl) {
         try {
             // Extract track ID
+            console.log('Converting Apple Music URL:', appleUrl);
             const trackId = AppleMusicAPI.extractTrackId(appleUrl);
+            console.log('Extracted track ID:', trackId);
+            
             if (!trackId) {
+                console.error('Failed to extract track ID from URL:', appleUrl);
                 throw new Error('Invalid Apple Music URL');
             }
 

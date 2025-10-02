@@ -81,14 +81,22 @@ class AppleMusicAPI {
     // Extract track ID from Apple Music URL
     static extractTrackId(url) {
         try {
+            console.log('Extracting track ID from URL:', url);
             // Handle two Apple Music URL formats:
             // 1. /album/...?i=123 (album page with track)
             // 2. /song/123 (direct song page)
             const albumMatch = url.match(/i=(\d+)/);
             const songMatch = url.match(/\/song\/(\d+)/);
             
-            return albumMatch ? albumMatch[1] : (songMatch ? songMatch[1] : null);
+            console.log('Album match:', albumMatch);
+            console.log('Song match:', songMatch);
+            
+            const trackId = albumMatch ? albumMatch[1] : (songMatch ? songMatch[1] : null);
+            console.log('Extracted track ID:', trackId);
+            
+            return trackId;
         } catch (error) {
+            console.error('Error extracting track ID:', error);
             return null;
         }
     }
