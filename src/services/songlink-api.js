@@ -58,7 +58,8 @@ class SongLinkAPI {
             'apple': 'appleMusic',
             'youtube': 'youtube',
             'youtubeMusic': 'youtubeMusic',
-            'amazon': 'amazonMusic'
+            'amazon': 'amazonMusic',
+            'tidal': 'tidal'
         };
 
         const platformKey = platformMap[platform];
@@ -69,6 +70,15 @@ class SongLinkAPI {
             return platformLinks.url;
         }
 
+        return null;
+    }
+
+    // Extract Tidal link from SongLink response
+    static extractTidalLink(songLinkData) {
+        const tidalLinks = songLinkData.linksByPlatform?.tidal;
+        if (tidalLinks && tidalLinks.url) {
+            return tidalLinks.url;
+        }
         return null;
     }
 }
