@@ -3,20 +3,15 @@ class MusicLinkConverter {
     constructor() {
         this.currentPlatform = 'apple'; // Default: Spotify → Apple Music
         this.initializeEventListeners();
-        this.updateUI(); // Set initial UI state
     }
 
     initializeEventListeners() {
-        // Platform selector buttons
-        document.querySelectorAll('.platform-btn').forEach(btn => {
+        // Arrow direction buttons
+        document.querySelectorAll('.arrow-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const button = e.target.closest('.platform-btn');
-                if (!button) return;
-                
-                document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
-                button.classList.add('active');
-                this.currentPlatform = button.dataset.platform;
-                this.updateUI();
+                document.querySelectorAll('.arrow-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentPlatform = btn.dataset.platform;
                 this.clearResult();
             });
         });
@@ -135,28 +130,6 @@ class MusicLinkConverter {
         resultLink.href = '#';
         resultLink.textContent = '';
         result.style.display = 'block';
-    }
-
-    updateUI() {
-        const input = document.getElementById('musicUrl');
-        const sourceLogo = document.getElementById('sourceLogo').querySelector('img');
-        const targetLogo = document.getElementById('targetLogo').querySelector('img');
-        
-        if (this.currentPlatform === 'apple') {
-            // Spotify → Apple Music
-            input.placeholder = 'Paste link here...';
-            sourceLogo.src = '/Spotify_icon.svg';
-            sourceLogo.alt = 'Spotify';
-            targetLogo.src = '/Apple_Music_icon.svg';
-            targetLogo.alt = 'Apple Music';
-        } else {
-            // Apple Music → Spotify
-            input.placeholder = 'Paste link here...';
-            sourceLogo.src = '/Apple_Music_icon.svg';
-            sourceLogo.alt = 'Apple Music';
-            targetLogo.src = '/Spotify_icon.svg';
-            targetLogo.alt = 'Spotify';
-        }
     }
 
     clearResult() {
