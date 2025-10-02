@@ -86,7 +86,7 @@ class TidalAPI {
                 type: 'TRACKS'
             });
 
-            const response = await fetch(`${this.baseUrl}/search/tracks?${params}`, {
+            const response = await fetch(`${this.baseUrl}/search?${params}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -94,12 +94,13 @@ class TidalAPI {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Tidal v2 search response:', response.status, errorText);
+                console.error('Tidal search response:', response.status, errorText);
                 throw new Error(`Tidal search failed: ${response.status}`);
             }
 
             const data = await response.json();
-            return data.items || [];
+            console.log('Tidal search data structure:', JSON.stringify(data).substring(0, 200));
+            return data.tracks?.items || data.items || [];
 
         } catch (error) {
             console.error('Tidal search error:', error);
