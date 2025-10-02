@@ -97,6 +97,15 @@ class AppleMusicAPI {
 
     // More accurate URL generation with album context
     static generateUrlWithAlbum(trackId, albumId, storefront = 'us') {
+        if (!trackId) {
+            throw new Error('Track ID is required for Apple Music URL generation');
+        }
+        
+        if (!albumId) {
+            console.warn('No album ID found, using fallback URL format');
+            return `https://music.apple.com/${storefront}/song/${trackId}`;
+        }
+        
         return `https://music.apple.com/${storefront}/album/${albumId}?i=${trackId}`;
     }
 }

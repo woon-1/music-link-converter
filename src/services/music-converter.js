@@ -128,9 +128,13 @@ class MusicConverter {
             }
 
             // Generate Apple Music URL
+            console.log('Apple Music track data:', JSON.stringify(bestMatch, null, 2));
+            const albumId = bestMatch.attributes?.albumId || bestMatch.relationships?.albums?.data?.[0]?.id;
+            console.log('Album ID found:', albumId);
+            
             const appleUrl = AppleMusicAPI.generateUrlWithAlbum(
                 bestMatch.id,
-                bestMatch.attributes?.albumId,
+                albumId,
                 'us'
             );
 
