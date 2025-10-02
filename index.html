@@ -242,56 +242,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        .examples {
-            margin-top: 32px;
-            padding: 20px;
-            background: #fafafa;
-            border-radius: 20px;
-            text-align: center;
-            border: 2px dashed #e0e0e0;
-            overflow: hidden;
-            max-width: 100%;
-        }
-
-        .examples-title {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .example-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            padding: 8px;
-            background: #fff;
-            border-radius: 12px;
-        }
-
-        .example-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .example-item img {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
-        .example-link {
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 10px;
-            color: #666;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 100%;
-        }
 
         @media (max-width: 600px) {
             .container {
@@ -332,14 +282,6 @@
                 font-size: 10px;
             }
             
-            .examples {
-                padding: 16px;
-            }
-            
-            .example-link {
-                font-size: 9px;
-            }
-            
             input[type="url"] {
                 font-size: 14px;
                 padding: 16px 20px;
@@ -375,14 +317,6 @@
             .platform-btn img {
                 width: 36px;
                 height: 36px;
-            }
-            
-            .examples {
-                padding: 14px;
-            }
-            
-            .example-link {
-                font-size: 8px;
             }
         }
     </style>
@@ -423,18 +357,6 @@
         <div class="result" id="result">
             <p id="resultText"></p>
             <a href="#" id="resultLink" class="result-link" target="_blank"></a>
-        </div>
-        
-        <div class="examples">
-            <div class="examples-title">Try these</div>
-            <div class="example-item">
-                <img src="/Spotify_icon.svg" alt="Spotify">
-                <div class="example-link">open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh</div>
-            </div>
-            <div class="example-item">
-                <img src="/Apple_Music_icon.svg" alt="Apple Music">
-                <div class="example-link">music.apple.com/us/album/anti-hero/1646849437?i=1646849440</div>
-            </div>
         </div>
     </div>
 
