@@ -98,9 +98,14 @@
             margin-bottom: 24px;
         }
 
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
         input[type="url"] {
             width: 100%;
-            padding: 18px 24px;
+            padding: 18px 50px 18px 24px;
             border: 2px solid #e0e0e0;
             border-radius: 20px;
             font-size: 15px;
@@ -109,7 +114,6 @@
             background: #fafafa;
             color: #000;
             text-align: center;
-            margin-bottom: 16px;
         }
 
         input[type="url"]:focus {
@@ -122,6 +126,31 @@
         input[type="url"]::placeholder {
             color: #aaa;
             font-weight: 400;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: none;
+            font-size: 18px;
+            color: #999;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .clear-btn:hover {
+            color: #000;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .clear-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .convert-btn {
@@ -398,7 +427,10 @@
         </div>
         
         <div class="input-section">
-            <input type="url" id="musicUrl" placeholder="Paste link here..." />
+            <div class="input-wrapper">
+                <input type="url" id="musicUrl" placeholder="Paste link here..." />
+                <button class="clear-btn" id="clearBtn">×</button>
+            </div>
             
             <button class="convert-btn" id="convertBtn">
                 <div class="shape"></div>

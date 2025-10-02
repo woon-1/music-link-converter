@@ -28,11 +28,27 @@ class MusicLinkConverter {
             this.convertLink();
         });
 
+        // Input field changes
+        const musicUrl = document.getElementById('musicUrl');
+        const clearBtn = document.getElementById('clearBtn');
+
+        musicUrl.addEventListener('input', () => {
+            clearBtn.style.display = musicUrl.value ? 'block' : 'none';
+        });
+
         // Enter key support
-        document.getElementById('musicUrl').addEventListener('keypress', (e) => {
+        musicUrl.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.convertLink();
             }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            musicUrl.value = '';
+            clearBtn.style.display = 'none';
+            musicUrl.focus();
+            this.clearResult();
         });
 
         // Copy button
