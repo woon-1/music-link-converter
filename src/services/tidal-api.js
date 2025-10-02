@@ -16,6 +16,10 @@ class TidalAPI {
         }
 
         try {
+            console.log('Getting Tidal token...');
+            console.log('Client ID exists:', !!this.clientId);
+            console.log('Client Secret exists:', !!this.clientSecret);
+            
             const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
             
             const response = await fetch('https://auth.tidal.com/v1/oauth2/token', {
@@ -31,11 +35,13 @@ class TidalAPI {
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('Tidal auth failed:', response.status, response.statusText);
                 console.error('Tidal auth response:', errorText);
                 throw new Error(`Failed to get Tidal token: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('Tidal token obtained successfully');
             this.accessToken = data.access_token;
             this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Refresh 1 min early
 
