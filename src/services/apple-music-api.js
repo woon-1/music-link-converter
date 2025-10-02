@@ -86,7 +86,7 @@ class AppleMusicAPI {
             // 1. /album/...?i=123 (album page with track)
             // 2. /song/123 (direct song page)
             const albumMatch = url.match(/i=(\d+)/);
-            const songMatch = url.match(/\/song\/(\d+)/);
+            const songMatch = url.match(/\/song\/[^\/]*\/(\d+)(?:\?|$)/);
             
             console.log('Album match:', albumMatch);
             console.log('Song match:', songMatch);
