@@ -1,11 +1,13 @@
 // Music Link Converter Service
 import SpotifyAPI from './spotify-api.js';
 import AppleMusicAPI from './apple-music-api.js';
+import YouTubeAPI from './youtube-api.js';
 
 class MusicConverter {
     constructor() {
         this.spotify = new SpotifyAPI();
         this.appleMusic = new AppleMusicAPI();
+        this.youtube = new YouTubeAPI();
     }
 
     // Normalize track data for comparison
@@ -26,6 +28,16 @@ class MusicConverter {
                 album: track.attributes?.albumName,
                 duration: track.attributes?.durationInMillis,
                 platform: 'apple',
+                id: track.id
+            };
+        } else if (platform === 'youtube' || platform === 'youtubeMusic') {
+            const parsed = YouTubeAPI.parseTitle(track.snippet?.title || '');
+            return {
+                title: parsed.title,
+                artist: parsed.artist || track.snippet?.channelTitle,
+                album: null,
+                duration: YouTubeAPI.parseDuration(track.contentDetails?.duration || 'PT0S'),
+                platform: platform,
                 id: track.id
             };
         }
@@ -230,6 +242,170 @@ class MusicConverter {
         }
     }
 
+    // Convert any platform to YouTube (or YouTube Music)
+    async convertToYouTube(sourceUrl, sourcePlatform, isYouTubeMusic = false) {
+        try {
+            let searchQuery = '';
+            let sourceTrack = null;
+
+            // Get track info from source platform
+            if (sourcePlatform === 'spotify') {
+                const trackId = SpotifyAPI.extractTrackId(sourceUrl);
+                const spotifyTrack = await this.spotify.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+                searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            } else if (sourcePlatform === 'apple') {
+                const trackId = AppleMusicAPI.extractTrackId(sourceUrl);
+                const appleTrack = await this.appleMusic.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(appleTrack, 'apple');
+                searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            } else if (sourcePlatform === 'youtube' || sourcePlatform === 'youtubeMusic') {
+                const videoId = YouTubeAPI.extractVideoId(sourceUrl);
+                const youtubeVideo = await this.youtube.getVideo(videoId);
+                sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
+                searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            }
+
+            // Search YouTube
+            const youtubeResults = await this.youtube.searchVideos(searchQuery, 20);
+
+            if (youtubeResults.length === 0) {
+                throw new Error('No matching video found on YouTube');
+            }
+
+            // Find best match
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const youtubeVideo of youtubeResults) {
+                const normalizedYouTube = this.normalizeTrackData(youtubeVideo, isYouTubeMusic ? 'youtubeMusic' : 'youtube');
+                const score = this.calculateSimilarity(sourceTrack, normalizedYouTube);
+                
+                if (score > bestScore && score > 60) {
+                    bestScore = score;
+                    bestMatch = youtubeVideo;
+                }
+            }
+
+            if (!bestMatch) {
+                throw new Error('No sufficiently similar video found on YouTube');
+            }
+
+            const youtubeUrl = YouTubeAPI.generateUrl(bestMatch.id, isYouTubeMusic);
+            const platformName = isYouTubeMusic ? 'YouTube Music' : 'YouTube';
+
+            return {
+                success: true,
+                originalUrl: sourceUrl,
+                convertedUrl: youtubeUrl,
+                originalPlatform: sourcePlatform,
+                targetPlatform: platformName,
+                confidence: bestScore,
+                track: {
+                    title: sourceTrack.title,
+                    artist: sourceTrack.artist,
+                    album: sourceTrack.album
+                }
+            };
+
+        } catch (error) {
+            console.error('Convert to YouTube error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Convert YouTube to another platform
+    async convertFromYouTube(youtubeUrl, targetPlatform, sourceIsYouTubeMusic = false) {
+        try {
+            const videoId = YouTubeAPI.extractVideoId(youtubeUrl);
+            const youtubeVideo = await this.youtube.getVideo(videoId);
+            const sourceTrack = this.normalizeTrackData(youtubeVideo, sourceIsYouTubeMusic ? 'youtubeMusic' : 'youtube');
+
+            const searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            let targetResults = [];
+            let bestMatch = null;
+            let bestScore = 0;
+
+            if (targetPlatform === 'spotify') {
+                targetResults = await this.spotify.searchTracks(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'spotify');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Spotify');
+                }
+
+                const spotifyUrl = SpotifyAPI.generateUrl(bestMatch.id);
+
+                return {
+                    success: true,
+                    originalUrl: youtubeUrl,
+                    convertedUrl: spotifyUrl,
+                    originalPlatform: sourceIsYouTubeMusic ? 'YouTube Music' : 'YouTube',
+                    targetPlatform: 'Spotify',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'apple') {
+                targetResults = await this.appleMusic.searchSongs(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'apple');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Apple Music');
+                }
+
+                const albumId = bestMatch.attributes?.albumId || bestMatch.relationships?.albums?.data?.[0]?.id;
+                const appleUrl = AppleMusicAPI.generateUrlWithAlbum(bestMatch.id, albumId, 'us');
+
+                return {
+                    success: true,
+                    originalUrl: youtubeUrl,
+                    convertedUrl: appleUrl,
+                    originalPlatform: sourceIsYouTubeMusic ? 'YouTube Music' : 'YouTube',
+                    targetPlatform: 'Apple Music',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            }
+
+        } catch (error) {
+            console.error('Convert from YouTube error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
     // Main conversion method
     async convert(url, targetPlatform) {
         try {
@@ -244,7 +420,19 @@ class MusicConverter {
                 throw new Error('Source and target platforms are the same');
             }
 
-            // Perform conversion
+            // Handle conversions TO YouTube or YouTube Music
+            if (targetPlatform === 'youtube') {
+                return await this.convertToYouTube(url, sourcePlatform, false);
+            } else if (targetPlatform === 'youtubeMusic') {
+                return await this.convertToYouTube(url, sourcePlatform, true);
+            }
+
+            // Handle conversions FROM YouTube or YouTube Music
+            if (sourcePlatform === 'youtube' || sourcePlatform === 'youtubeMusic') {
+                return await this.convertFromYouTube(url, targetPlatform, sourcePlatform === 'youtubeMusic');
+            }
+
+            // Original Spotify <-> Apple Music conversions
             if (sourcePlatform === 'spotify' && targetPlatform === 'apple') {
                 return await this.convertSpotifyToApple(url);
             } else if (sourcePlatform === 'apple' && targetPlatform === 'spotify') {
@@ -267,6 +455,10 @@ class MusicConverter {
             return 'spotify';
         } else if (url.includes('music.apple.com')) {
             return 'apple';
+        } else if (url.includes('music.youtube.com')) {
+            return 'youtubeMusic';
+        } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            return 'youtube';
         }
         return null;
     }

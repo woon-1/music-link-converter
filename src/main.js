@@ -1,25 +1,42 @@
 // Main application logic
 class MusicLinkConverter {
     constructor() {
-        this.currentPlatform = 'apple'; // Default: Spotify → Apple Music
+        this.platformLogos = {
+            'spotify': '/Spotify_icon.svg',
+            'apple': '/Apple_Music_icon.svg',
+            'youtube': '/YouTube_icon.svg',
+            'youtubeMusic': '/YouTube_Music_icon.svg'
+        };
         this.initializeEventListeners();
+        this.updateLogos(); // Set initial logos
     }
 
     initializeEventListeners() {
-        // Direction toggle button
+        const sourcePlatform = document.getElementById('sourcePlatform');
+        const targetPlatform = document.getElementById('targetPlatform');
         const directionToggle = document.getElementById('directionToggle');
-        const rightArrow = document.getElementById('rightArrow');
-        const leftArrow = document.getElementById('leftArrow');
 
+        // Platform dropdown changes
+        sourcePlatform.addEventListener('change', () => {
+            this.updateLogos();
+            this.clearResult();
+        });
+
+        targetPlatform.addEventListener('change', () => {
+            this.updateLogos();
+            this.clearResult();
+        });
+
+        // Direction toggle button - swaps source and target
         directionToggle.addEventListener('click', () => {
-            this.toggleDirection();
+            this.swapPlatforms();
         });
 
         // Keyboard support for direction toggle
         directionToggle.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                this.toggleDirection();
+                this.swapPlatforms();
             }
         });
 
@@ -84,33 +101,33 @@ class MusicLinkConverter {
         });
     }
 
-    toggleDirection() {
-        const rightArrow = document.getElementById('rightArrow');
-        const leftArrow = document.getElementById('leftArrow');
+    updateLogos() {
+        const sourcePlatform = document.getElementById('sourcePlatform').value;
+        const targetPlatform = document.getElementById('targetPlatform').value;
+        const sourceLogoImg = document.getElementById('sourceLogoImg');
+        const targetLogoImg = document.getElementById('targetLogoImg');
 
-        // Toggle platform
-        this.currentPlatform = this.currentPlatform === 'apple' ? 'spotify' : 'apple';
+        sourceLogoImg.src = this.platformLogos[sourcePlatform];
+        targetLogoImg.src = this.platformLogos[targetPlatform];
+    }
 
-        // Toggle arrow styles
-        if (this.currentPlatform === 'apple') {
-            // Spotify → Apple Music
-            rightArrow.classList.remove('inactive');
-            rightArrow.classList.add('active');
-            leftArrow.classList.remove('active');
-            leftArrow.classList.add('inactive');
-        } else {
-            // Apple Music → Spotify
-            leftArrow.classList.remove('inactive');
-            leftArrow.classList.add('active');
-            rightArrow.classList.remove('active');
-            rightArrow.classList.add('inactive');
-        }
+    swapPlatforms() {
+        const sourcePlatform = document.getElementById('sourcePlatform');
+        const targetPlatform = document.getElementById('targetPlatform');
 
+        // Swap the selected values
+        const temp = sourcePlatform.value;
+        sourcePlatform.value = targetPlatform.value;
+        targetPlatform.value = temp;
+
+        // Update logos
+        this.updateLogos();
         this.clearResult();
     }
 
     async convertLink() {
         const url = document.getElementById('musicUrl').value.trim();
+        const targetPlatform = document.getElementById('targetPlatform').value;
         
         if (!url) {
             this.showError('enter a link, dummy');
@@ -126,7 +143,7 @@ class MusicLinkConverter {
         this.clearResult();
 
         try {
-            const result = await this.fetchConvertedLink(url, this.currentPlatform);
+            const result = await this.fetchConvertedLink(url, targetPlatform);
             
             if (result.success) {
                 this.showSuccess(result.link, result.platform, result.confidence, result.track);

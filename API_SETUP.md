@@ -17,6 +17,11 @@ APPLE_MUSIC_KEY_ID=your_apple_key_id
 APPLE_MUSIC_PRIVATE_KEY=your_apple_private_key
 ```
 
+### YouTube Data API v3
+```
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
 ## How to Get API Keys
 
 ### 1. Spotify Web API
@@ -65,6 +70,26 @@ APPLE_MUSIC_PRIVATE_KEY=your_apple_private_key
    - Add `APPLE_MUSIC_TEAM_ID` (your Team ID)
    - Add `APPLE_MUSIC_KEY_ID` (from step 3)
    - Add `APPLE_MUSIC_PRIVATE_KEY` (contents of the .p8 file)
+
+### 3. YouTube Data API v3
+
+1. **Go to [Google Cloud Console](https://console.cloud.google.com/)**
+2. **Create a new project** (if you haven't already)
+3. **Enable YouTube Data API v3:**
+   - Go to APIs & Services → Library
+   - Search for "YouTube Data API v3"
+   - Click "Enable"
+4. **Create API Key:**
+   - Go to APIs & Services → Credentials
+   - Click "Create Credentials" → "API Key"
+   - Copy the API key
+5. **Restrict the key (recommended):**
+   - Click on the key to edit
+   - Under "API restrictions", select "Restrict key"
+   - Select only "YouTube Data API v3"
+   - Save
+6. **Add to Vercel:**
+   - Add `YOUTUBE_API_KEY` with your API key
 
 ## Testing Your Setup
 
