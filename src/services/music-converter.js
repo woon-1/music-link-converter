@@ -4,6 +4,7 @@ import AppleMusicAPI from './apple-music-api.js';
 import YouTubeAPI from './youtube-api.js';
 import SongLinkAPI from './songlink-api.js';
 import TidalAPI from './tidal-api.js';
+import SoundCloudAPI from './soundcloud-api.js';
 
 class MusicConverter {
     constructor() {
@@ -12,6 +13,7 @@ class MusicConverter {
         this.youtube = new YouTubeAPI();
         this.songlink = new SongLinkAPI();
         this.tidal = new TidalAPI();
+        this.soundcloud = new SoundCloudAPI();
     }
 
     // Normalize track data for comparison
@@ -61,6 +63,16 @@ class MusicConverter {
                 duration: track.duration ? track.duration * 1000 : track.durationMs,
                 platform: 'tidal',
                 id: track.id
+            };
+        } else if (platform === 'soundcloud') {
+            return {
+                title: track.title,
+                artist: track.user?.username || track.publisher_metadata?.artist || 'Unknown',
+                album: null,
+                duration: track.duration || track.full_duration,
+                platform: 'soundcloud',
+                id: track.id,
+                permalink: track.permalink_url
             };
         }
         return null;
@@ -653,6 +665,227 @@ class MusicConverter {
         }
     }
 
+    // Convert to SoundCloud from any platform
+    async convertToSoundCloud(sourceUrl, sourcePlatform) {
+        try {
+            // Get track info from source
+            let sourceTrack = null;
+            
+            if (sourcePlatform === 'spotify') {
+                const trackId = SpotifyAPI.extractTrackId(sourceUrl);
+                const spotifyTrack = await this.spotify.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+            } else if (sourcePlatform === 'apple') {
+                const trackId = AppleMusicAPI.extractTrackId(sourceUrl);
+                const appleTrack = await this.appleMusic.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(appleTrack, 'apple');
+            } else if (sourcePlatform === 'youtube' || sourcePlatform === 'youtubeMusic') {
+                const videoId = YouTubeAPI.extractVideoId(sourceUrl);
+                const youtubeVideo = await this.youtube.getVideo(videoId);
+                sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
+            } else if (sourcePlatform === 'amazon' || sourcePlatform === 'tidal') {
+                // Use SongLink for Amazon/Tidal first to get Spotify link
+                const songLinkData = await this.songlink.getLinks(sourceUrl);
+                const spotifyUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
+                if (spotifyUrl) {
+                    const trackId = SpotifyAPI.extractTrackId(spotifyUrl);
+                    const spotifyTrack = await this.spotify.getTrack(trackId);
+                    sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+                }
+            }
+
+            if (!sourceTrack) {
+                throw new Error('Could not get track info from source');
+            }
+
+            // Search SoundCloud
+            const searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            const soundcloudResults = await this.soundcloud.searchTracks(searchQuery, 20);
+
+            if (soundcloudResults.length === 0) {
+                throw new Error('No matching track found on SoundCloud');
+            }
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const track of soundcloudResults) {
+                const normalized = this.normalizeTrackData(track, 'soundcloud');
+                const score = this.calculateSimilarity(sourceTrack, normalized);
+                
+                if (score > bestScore && score > 60) {
+                    bestScore = score;
+                    bestMatch = track;
+                }
+            }
+
+            if (!bestMatch) {
+                throw new Error('No sufficiently similar track found on SoundCloud');
+            }
+
+            return {
+                success: true,
+                originalUrl: sourceUrl,
+                convertedUrl: bestMatch.permalink_url,
+                originalPlatform: sourcePlatform,
+                targetPlatform: 'SoundCloud',
+                confidence: bestScore,
+                track: {
+                    title: sourceTrack.title,
+                    artist: sourceTrack.artist,
+                    album: sourceTrack.album
+                }
+            };
+
+        } catch (error) {
+            console.error('Convert to SoundCloud error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Convert from SoundCloud to other platforms
+    async convertFromSoundCloud(soundcloudUrl, targetPlatform) {
+        try {
+            // Resolve SoundCloud URL to get track data
+            const soundcloudTrack = await this.soundcloud.resolveUrl(soundcloudUrl);
+            const sourceTrack = this.normalizeTrackData(soundcloudTrack, 'soundcloud');
+
+            const searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            let targetResults = [];
+            let bestMatch = null;
+            let bestScore = 0;
+
+            if (targetPlatform === 'spotify') {
+                targetResults = await this.spotify.searchTracks(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'spotify');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Spotify');
+                }
+
+                return {
+                    success: true,
+                    originalUrl: soundcloudUrl,
+                    convertedUrl: SpotifyAPI.generateUrl(bestMatch.id),
+                    originalPlatform: 'SoundCloud',
+                    targetPlatform: 'Spotify',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'apple') {
+                targetResults = await this.appleMusic.searchSongs(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'apple');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Apple Music');
+                }
+
+                const albumId = bestMatch.attributes?.albumId || bestMatch.relationships?.albums?.data?.[0]?.id;
+                return {
+                    success: true,
+                    originalUrl: soundcloudUrl,
+                    convertedUrl: AppleMusicAPI.generateUrlWithAlbum(bestMatch.id, albumId, 'us'),
+                    originalPlatform: 'SoundCloud',
+                    targetPlatform: 'Apple Music',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'youtube' || targetPlatform === 'youtubeMusic') {
+                targetResults = await this.youtube.searchVideos(searchQuery, 20);
+                
+                for (const video of targetResults) {
+                    const normalized = this.normalizeTrackData(video, targetPlatform);
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = video;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error(`No sufficiently similar track found on ${targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube'}`);
+                }
+
+                return {
+                    success: true,
+                    originalUrl: soundcloudUrl,
+                    convertedUrl: YouTubeAPI.generateUrl(bestMatch.id, targetPlatform === 'youtubeMusic'),
+                    originalPlatform: 'SoundCloud',
+                    targetPlatform: targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            } else if (targetPlatform === 'amazon' || targetPlatform === 'tidal') {
+                // Use SongLink for SoundCloud → Amazon/Tidal
+                const songLinkData = await this.songlink.getLinks(soundcloudUrl);
+                const targetUrl = SongLinkAPI.extractPlatformLink(songLinkData, targetPlatform === 'amazon' ? 'amazonMusic' : 'tidal');
+
+                if (!targetUrl) {
+                    throw new Error(`No ${this.getPlatformName(targetPlatform)} link found for this track`);
+                }
+
+                return {
+                    success: true,
+                    originalUrl: soundcloudUrl,
+                    convertedUrl: targetUrl,
+                    originalPlatform: 'SoundCloud',
+                    targetPlatform: this.getPlatformName(targetPlatform),
+                    confidence: 95,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            }
+
+            throw new Error(`Unsupported target platform: ${targetPlatform}`);
+
+        } catch (error) {
+            console.error('Convert from SoundCloud error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
     // Old complex implementation - keeping for reference
     async convertFromTidalOld(tidalUrl, targetPlatform) {
         try {
@@ -799,7 +1032,8 @@ class MusicConverter {
             'youtube': 'YouTube',
             'youtubeMusic': 'YouTube Music',
             'amazon': 'Amazon Music',
-            'tidal': 'Tidal'
+            'tidal': 'Tidal',
+            'soundcloud': 'SoundCloud'
         };
         return names[platform] || platform;
     }
@@ -850,6 +1084,16 @@ class MusicConverter {
                 return await this.convertFromYouTube(url, targetPlatform, sourcePlatform === 'youtubeMusic');
             }
 
+            // Handle conversions TO SoundCloud
+            if (targetPlatform === 'soundcloud') {
+                return await this.convertToSoundCloud(url, sourcePlatform);
+            }
+
+            // Handle conversions FROM SoundCloud
+            if (sourcePlatform === 'soundcloud') {
+                return await this.convertFromSoundCloud(url, targetPlatform);
+            }
+
             // Original Spotify <-> Apple Music conversions
             if (sourcePlatform === 'spotify' && targetPlatform === 'apple') {
                 return await this.convertSpotifyToApple(url);
@@ -881,6 +1125,8 @@ class MusicConverter {
             return 'amazon';
         } else if (url.includes('tidal.com') || url.includes('listen.tidal.com')) {
             return 'tidal';
+        } else if (url.includes('soundcloud.com')) {
+            return 'soundcloud';
         }
         return null;
     }

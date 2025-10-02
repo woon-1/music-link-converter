@@ -7,7 +7,8 @@ class MusicLinkConverter {
             'youtube': '/YouTube_icon.svg',
             'youtubeMusic': '/YouTube_Music_icon.svg',
             'amazon': '/Amazon_Music_icon.svg',
-            'tidal': '/Tidal_icon.svg'
+            'tidal': '/Tidal_icon.svg',
+            'soundcloud': '/SoundCloud_icon.svg'
         };
         this.leftPlatform = 'spotify';
         this.rightPlatform = 'apple';

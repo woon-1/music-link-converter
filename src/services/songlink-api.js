@@ -59,7 +59,8 @@ class SongLinkAPI {
             'youtube': 'youtube',
             'youtubeMusic': 'youtubeMusic',
             'amazon': 'amazonMusic',
-            'tidal': 'tidal'
+            'tidal': 'tidal',
+            'soundcloud': 'soundcloud'
         };
 
         const platformKey = platformMap[platform];
