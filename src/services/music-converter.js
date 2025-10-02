@@ -54,11 +54,12 @@ class MusicConverter {
                 id: track.id || track.asin
             };
         } else if (platform === 'tidal') {
+            // v2 uses JSON:API format
             return {
-                title: track.title || track.name,
-                artist: track.artist?.name || track.artists?.[0]?.name || track.artist,
-                album: track.album?.title || track.album?.name || track.albumName,
-                duration: track.duration ? track.duration * 1000 : track.durationMs,
+                title: track.attributes?.title || track.title,
+                artist: track.attributes?.artist?.name || track.artist?.name || track.artists?.[0]?.name,
+                album: track.attributes?.album?.title || track.album?.title || track.album?.name,
+                duration: track.attributes?.duration ? track.attributes.duration * 1000 : (track.duration ? track.duration * 1000 : null),
                 platform: 'tidal',
                 id: track.id
             };
@@ -534,20 +535,13 @@ class MusicConverter {
         }
     }
 
-    // Convert to Tidal from any platform using SongLink
+    // Convert to Tidal from any platform
     async convertToTidal(sourceUrl, sourcePlatform) {
         try {
-            // Use SongLink API to get Tidal link
-            const songLinkData = await this.songlink.getLinks(sourceUrl);
-            const tidalUrl = SongLinkAPI.extractTidalLink(songLinkData);
+            let searchQuery = '';
+            let sourceTrack = null;
 
-            if (!tidalUrl) {
-                throw new Error('No Tidal link found for this track');
-            }
-
-            // Get track info for display
-            let sourceTrack = { title: '', artist: '', album: '' };
-            
+            // Get track info from source
             if (sourcePlatform === 'spotify') {
                 const trackId = SpotifyAPI.extractTrackId(sourceUrl);
                 const spotifyTrack = await this.spotify.getTrack(trackId);
@@ -560,7 +554,42 @@ class MusicConverter {
                 const videoId = YouTubeAPI.extractVideoId(sourceUrl);
                 const youtubeVideo = await this.youtube.getVideo(videoId);
                 sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
+            } else if (sourcePlatform === 'amazon') {
+                // For Amazon, use SongLink to get track info first
+                const songLinkData = await this.songlink.getLinks(sourceUrl);
+                const spotifyUrl = SongLinkAPI.extractPlatformLink(songLinkData, 'spotify');
+                if (spotifyUrl) {
+                    const trackId = SpotifyAPI.extractTrackId(spotifyUrl);
+                    const spotifyTrack = await this.spotify.getTrack(trackId);
+                    sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+                }
             }
+
+            searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            const tidalResults = await this.tidal.searchTracks(searchQuery, 20);
+
+            if (tidalResults.length === 0) {
+                throw new Error('No matching track found on Tidal');
+            }
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const tidalTrack of tidalResults) {
+                const normalized = this.normalizeTrackData(tidalTrack, 'tidal');
+                const score = this.calculateSimilarity(sourceTrack, normalized);
+                
+                if (score > bestScore && score > 60) {
+                    bestScore = score;
+                    bestMatch = tidalTrack;
+                }
+            }
+
+            if (!bestMatch) {
+                throw new Error('No sufficiently similar track found on Tidal');
+            }
+
+            const tidalUrl = TidalAPI.generateUrl(bestMatch.id);
 
             return {
                 success: true,
@@ -568,7 +597,7 @@ class MusicConverter {
                 convertedUrl: tidalUrl,
                 originalPlatform: sourcePlatform,
                 targetPlatform: 'Tidal',
-                confidence: 95,
+                confidence: bestScore,
                 track: {
                     title: sourceTrack.title,
                     artist: sourceTrack.artist,

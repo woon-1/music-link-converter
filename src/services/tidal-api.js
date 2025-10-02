@@ -3,7 +3,7 @@ class TidalAPI {
     constructor() {
         this.clientId = process.env.TIDAL_CLIENT_ID;
         this.clientSecret = process.env.TIDAL_CLIENT_SECRET;
-        this.baseUrl = 'https://api.tidal.com/v1';
+        this.baseUrl = 'https://openapi.tidal.com';
         this.accessToken = null;
         this.tokenExpiry = null;
     }
@@ -77,23 +77,25 @@ class TidalAPI {
                 query: query,
                 limit: limit,
                 countryCode: 'US',
-                sessionId: token
+                type: 'TRACKS'
             });
 
-            const response = await fetch(`${this.baseUrl}/search/tracks?${params}`, {
+            const response = await fetch(`${this.baseUrl}/v2/searchresults/${encodeURIComponent(query)}?${params}`, {
                 headers: {
-                    'x-tidal-token': token
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.api+json'
                 }
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Tidal search response:', response.status, errorText);
+                console.error('Tidal v2 search response:', response.status, errorText);
                 throw new Error(`Tidal search failed: ${response.status}`);
             }
 
             const data = await response.json();
-            return data.items || [];
+            // v2 uses JSON:API format
+            return data.data || [];
 
         } catch (error) {
             console.error('Tidal search error:', error);
@@ -107,24 +109,25 @@ class TidalAPI {
             const token = await this.getAccessToken();
 
             const params = new URLSearchParams({
-                countryCode: 'US',
-                sessionId: token
+                countryCode: 'US'
             });
 
-            const response = await fetch(`${this.baseUrl}/tracks/${trackId}?${params}`, {
+            const response = await fetch(`${this.baseUrl}/v2/tracks/${trackId}?${params}`, {
                 headers: {
-                    'x-tidal-token': token
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.api+json'
                 }
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Tidal get track response:', response.status, errorText);
+                console.error('Tidal v2 get track response:', response.status, errorText);
                 throw new Error(`Track not found: ${response.status}`);
             }
 
             const data = await response.json();
-            return data;
+            // v2 uses JSON:API format
+            return data.data;
 
         } catch (error) {
             console.error('Tidal get track error:', error);
