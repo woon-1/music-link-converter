@@ -29,7 +29,8 @@ class TidalAPI {
                     'Authorization': `Basic ${credentials}`
                 },
                 body: new URLSearchParams({
-                    'grant_type': 'client_credentials'
+                    'grant_type': 'client_credentials',
+                    'scope': 'r_usr'
                 })
             });
 
