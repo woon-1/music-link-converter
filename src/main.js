@@ -6,14 +6,21 @@ class MusicLinkConverter {
     }
 
     initializeEventListeners() {
-        // Arrow direction buttons
-        document.querySelectorAll('.arrow-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.arrow-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.currentPlatform = btn.dataset.platform;
-                this.clearResult();
-            });
+        // Direction toggle button
+        const directionToggle = document.getElementById('directionToggle');
+        const rightArrow = document.getElementById('rightArrow');
+        const leftArrow = document.getElementById('leftArrow');
+
+        directionToggle.addEventListener('click', () => {
+            this.toggleDirection();
+        });
+
+        // Keyboard support for direction toggle
+        directionToggle.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleDirection();
+            }
         });
 
         // Convert button
@@ -27,6 +34,31 @@ class MusicLinkConverter {
                 this.convertLink();
             }
         });
+    }
+
+    toggleDirection() {
+        const rightArrow = document.getElementById('rightArrow');
+        const leftArrow = document.getElementById('leftArrow');
+
+        // Toggle platform
+        this.currentPlatform = this.currentPlatform === 'apple' ? 'spotify' : 'apple';
+
+        // Toggle arrow styles
+        if (this.currentPlatform === 'apple') {
+            // Spotify → Apple Music
+            rightArrow.classList.remove('inactive');
+            rightArrow.classList.add('active');
+            leftArrow.classList.remove('active');
+            leftArrow.classList.add('inactive');
+        } else {
+            // Apple Music → Spotify
+            leftArrow.classList.remove('inactive');
+            leftArrow.classList.add('active');
+            rightArrow.classList.remove('active');
+            rightArrow.classList.add('inactive');
+        }
+
+        this.clearResult();
     }
 
     async convertLink() {

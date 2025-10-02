@@ -67,6 +67,7 @@
             padding: 8px 12px;
             border: 2px solid #e0e0e0;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .arrows-container:hover {
@@ -74,33 +75,23 @@
             background: #fafafa;
         }
 
-        .arrow-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px;
-            transition: all 0.3s ease;
+        .arrows-container:active {
+            transform: scale(0.95);
+        }
+
+        .arrow-icon {
             font-size: 20px;
             line-height: 1;
-            color: #d0d0d0;
-            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
-        .arrow-btn:hover {
-            background: #fff;
-        }
-
-        .arrow-btn.active {
+        .arrow-icon.active {
             color: #000;
             font-weight: bold;
         }
 
-        .arrow-btn.top {
-            /* Spotify to Apple */
-        }
-
-        .arrow-btn.bottom {
-            /* Apple to Spotify */
+        .arrow-icon.inactive {
+            color: #d0d0d0;
         }
 
         .input-section {
@@ -135,17 +126,18 @@
 
         .convert-btn {
             width: 100%;
-            padding: 20px;
+            padding: 24px;
             background: #000;
             color: #fff;
             border: none;
             border-radius: 20px;
-            font-size: 32px;
-            font-weight: 400;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: 'Inter', sans-serif;
-            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         .convert-btn:hover {
@@ -153,9 +145,22 @@
             transform: translateY(-2px);
         }
 
+        .convert-btn:hover .shape {
+            transform: rotate(180deg);
+        }
+
         .convert-btn:active {
             transform: translateY(0);
             background: #000;
+        }
+
+        .shape {
+            width: 28px;
+            height: 28px;
+            background: #fff;
+            transform: rotate(45deg);
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 4px;
         }
 
         .result {
@@ -281,9 +286,9 @@
                 <img src="/Spotify_icon.svg" alt="Spotify">
             </div>
             
-            <div class="arrows-container">
-                <button class="arrow-btn top active" data-platform="apple" aria-label="Convert from Spotify to Apple Music">→</button>
-                <button class="arrow-btn bottom" data-platform="spotify" aria-label="Convert from Apple Music to Spotify">←</button>
+            <div class="arrows-container" id="directionToggle" role="button" tabindex="0" aria-label="Toggle conversion direction">
+                <div class="arrow-icon active" id="rightArrow">→</div>
+                <div class="arrow-icon inactive" id="leftArrow">←</div>
             </div>
             
             <div class="logo-container">
@@ -294,7 +299,9 @@
         <div class="input-section">
             <input type="url" id="musicUrl" placeholder="Paste link here..." />
             
-            <button class="convert-btn" id="convertBtn">⇄</button>
+            <button class="convert-btn" id="convertBtn">
+                <div class="shape"></div>
+            </button>
         </div>
         
         <div class="loading" id="loading">
