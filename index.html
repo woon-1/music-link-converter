@@ -88,15 +88,15 @@
             right: -6px;
             font-size: 12px;
             color: #000;
-            transition: transform 0.3s ease;
+            transition: none;
             pointer-events: none;
-            will-change: transform;
-            transform: translateZ(0);
+            transform: translate3d(0, 0, 0);
             backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         .logo-selector:hover .dropdown-indicator {
-            transform: translateY(2px) translateZ(0);
+            bottom: -4px;
         }
 
         .platform-menu {
