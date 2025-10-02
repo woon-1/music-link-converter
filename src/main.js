@@ -34,9 +34,11 @@ class MusicLinkConverter {
         const inputWrapper = document.querySelector('.input-wrapper');
 
         const checkOverflow = () => {
-            // Check if text is overflowing
+            // Check if text is overflowing AND not scrolled to the end
             const isOverflowing = musicUrl.scrollWidth > musicUrl.clientWidth;
-            if (isOverflowing) {
+            const isAtEnd = musicUrl.scrollLeft + musicUrl.clientWidth >= musicUrl.scrollWidth - 1;
+            
+            if (isOverflowing && !isAtEnd) {
                 inputWrapper.classList.add('has-overflow');
             } else {
                 inputWrapper.classList.remove('has-overflow');
@@ -53,6 +55,10 @@ class MusicLinkConverter {
         });
 
         musicUrl.addEventListener('focus', () => {
+            checkOverflow();
+        });
+
+        musicUrl.addEventListener('scroll', () => {
             checkOverflow();
         });
 
