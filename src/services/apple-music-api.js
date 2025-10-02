@@ -82,11 +82,15 @@ class AppleMusicAPI {
     static extractTrackId(url) {
         try {
             console.log('Extracting track ID from URL:', url);
-            // Handle two Apple Music URL formats:
+            // Handle multiple Apple Music URL formats:
             // 1. /album/...?i=123 (album page with track)
-            // 2. /song/123 (direct song page)
+            // 2. /song/123 (direct song ID)
+            // 3. /song/song-title/123 (song with title in path)
             const albumMatch = url.match(/i=(\d+)/);
-            const songMatch = url.match(/\/song\/[^\/]*\/(\d+)(?:\?|$)/);
+            // Handle multiple Apple Music URL formats:
+            // 1. /song/123 (direct song ID)
+            // 2. /song/song-title/123 (song with title in path)
+            const songMatch = url.match(/\/song\/(?:[^\/]*\/)?(\d+)(?:\?|$)/);
             
             console.log('Album match:', albumMatch);
             console.log('Song match:', songMatch);
