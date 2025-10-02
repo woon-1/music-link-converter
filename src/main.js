@@ -149,10 +149,10 @@ class MusicLinkConverter {
         
         let trackInfo = '';
         if (track) {
-            trackInfo = `🎵 ${track.title} - ${track.artist}\n`;
+            trackInfo = `${track.title} - ${track.artist}`;
         }
         
-        resultText.textContent = `${trackInfo}✓ Link ready`;
+        resultText.textContent = trackInfo;
         resultLink.href = link;
         resultLink.textContent = link;
         copyBtn.style.display = 'inline-block';
