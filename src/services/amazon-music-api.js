@@ -24,8 +24,7 @@ class AmazonMusicAPI {
                 body: new URLSearchParams({
                     'grant_type': 'client_credentials',
                     'client_id': this.clientId,
-                    'client_secret': this.clientSecret,
-                    'scope': 'music::catalog'
+                    'client_secret': this.clientSecret
                 }).toString()
             });
 
