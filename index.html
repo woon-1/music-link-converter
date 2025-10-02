@@ -103,9 +103,21 @@
             margin-bottom: 16px;
         }
 
+        .input-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 50px;
+            bottom: 2px;
+            width: 40px;
+            background: linear-gradient(to right, transparent, #fafafa);
+            pointer-events: none;
+            border-radius: 0 18px 18px 0;
+        }
+
         input[type="url"] {
             width: 100%;
-            padding: 18px 70px 18px 24px;
+            padding: 18px 50px 18px 24px;
             border: 2px solid #e0e0e0;
             border-radius: 20px;
             font-size: 15px;
@@ -121,6 +133,14 @@
             border-color: #000;
             background: #fff;
             box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+        }
+
+        input[type="url"]:focus ~ .clear-btn {
+            z-index: 2;
+        }
+
+        .input-wrapper:has(input:focus)::after {
+            background: linear-gradient(to right, transparent, #fff);
         }
 
         input[type="url"]::placeholder {
@@ -143,6 +163,7 @@
             color: #999;
             transition: all 0.2s ease;
             line-height: 1;
+            z-index: 3;
         }
 
         .clear-btn:hover {
