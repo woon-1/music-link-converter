@@ -429,27 +429,22 @@
             transform: translate(2px, 2px);
         }
 
-        /* Checkmark for copied state - simple angular V shape */
+        /* Checkmark for copied state - use SVG */
         .copy-icon.copied::before {
             content: '';
             position: absolute;
-            width: 4px;
-            height: 2px;
-            background: #000;
-            transform: rotate(-45deg);
-            top: 9px;
-            left: 5px;
+            width: 16px;
+            height: 16px;
+            background: url('/check-icon.svg') no-repeat center;
+            background-size: contain;
+            top: 2px;
+            left: 2px;
+            border: none;
+            transform: none;
         }
 
         .copy-icon.copied::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 2px;
-            background: #000;
-            transform: rotate(45deg);
-            top: 8px;
-            left: 8px;
+            display: none;
         }
 
         .loading {
