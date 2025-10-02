@@ -16,23 +16,23 @@ class AmazonMusicAPI {
         }
 
         try {
-            const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-            
             const response = await fetch('https://api.amazon.com/auth/o2/token', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': `Basic ${credentials}`
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 body: new URLSearchParams({
                     'grant_type': 'client_credentials',
+                    'client_id': this.clientId,
+                    'client_secret': this.clientSecret,
                     'scope': 'music::catalog'
-                })
+                }).toString()
             });
 
             if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Failed to get Amazon Music token: ${error}`);
+                const errorText = await response.text();
+                console.error('Amazon auth response:', errorText);
+                throw new Error(`Failed to get Amazon Music token: ${response.status} ${errorText}`);
             }
 
             const data = await response.json();
