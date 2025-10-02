@@ -79,6 +79,7 @@ class TidalAPI {
         try {
             const token = await this.getAccessToken();
             
+            // Try v2 search endpoint first
             const params = new URLSearchParams({
                 query: query,
                 limit: limit,
@@ -86,7 +87,10 @@ class TidalAPI {
                 type: 'TRACKS'
             });
 
-            const response = await fetch(`${this.baseUrl}/search?${params}`, {
+            const searchUrl = `${this.baseUrl}/searchresults/${encodeURIComponent(query)}?countryCode=US&limit=${limit}&offset=0&types=TRACKS`;
+            console.log('Trying Tidal search URL:', searchUrl);
+
+            const response = await fetch(searchUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'accept': 'application/vnd.tidal.v1+json',
@@ -101,7 +105,7 @@ class TidalAPI {
             }
 
             const data = await response.json();
-            console.log('Tidal search data structure:', JSON.stringify(data).substring(0, 200));
+            console.log('Tidal search data structure:', JSON.stringify(data).substring(0, 500));
             return data.tracks?.items || data.items || [];
 
         } catch (error) {
