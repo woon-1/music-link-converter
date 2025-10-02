@@ -82,7 +82,7 @@ class TidalAPI {
 
             const response = await fetch(`${this.baseUrl}/search/tracks?${params}`, {
                 headers: {
-                    'x-tidal-token': token
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -112,7 +112,7 @@ class TidalAPI {
 
             const response = await fetch(`${this.baseUrl}/tracks/${trackId}?${params}`, {
                 headers: {
-                    'x-tidal-token': token
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
