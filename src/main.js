@@ -7,28 +7,49 @@ class MusicLinkConverter {
             'youtube': '/YouTube_icon.svg',
             'youtubeMusic': '/YouTube_Music_icon.svg'
         };
+        this.sourcePlatform = 'spotify';
+        this.targetPlatform = 'apple';
         this.initializeEventListeners();
-        this.updateLogos(); // Set initial logos
     }
 
     initializeEventListeners() {
-        const sourcePlatform = document.getElementById('sourcePlatform');
-        const targetPlatform = document.getElementById('targetPlatform');
+        // Logo dropdown toggles
+        document.querySelector('[data-type="source"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleMenu('source');
+        });
+
+        document.querySelector('[data-type="target"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleMenu('target');
+        });
+
+        // Platform option clicks
+        document.querySelectorAll('#sourceMenu .platform-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectPlatform('source', option.dataset.platform);
+                this.closeAllMenus();
+            });
+        });
+
+        document.querySelectorAll('#targetMenu .platform-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectPlatform('target', option.dataset.platform);
+                this.closeAllMenus();
+            });
+        });
+
+        // Close menus when clicking outside
+        document.addEventListener('click', () => {
+            this.closeAllMenus();
+        });
+
+        // Direction toggle button
         const directionToggle = document.getElementById('directionToggle');
-
-        // Platform dropdown changes
-        sourcePlatform.addEventListener('change', () => {
-            this.updateLogos();
-            this.clearResult();
-        });
-
-        targetPlatform.addEventListener('change', () => {
-            this.updateLogos();
-            this.clearResult();
-        });
-
-        // Direction toggle button - swaps source and target
-        directionToggle.addEventListener('click', () => {
+        directionToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
             this.swapPlatforms();
         });
 
@@ -101,33 +122,48 @@ class MusicLinkConverter {
         });
     }
 
-    updateLogos() {
-        const sourcePlatform = document.getElementById('sourcePlatform').value;
-        const targetPlatform = document.getElementById('targetPlatform').value;
-        const sourceLogoImg = document.getElementById('sourceLogoImg');
-        const targetLogoImg = document.getElementById('targetLogoImg');
+    toggleMenu(type) {
+        const menu = document.getElementById(type === 'source' ? 'sourceMenu' : 'targetMenu');
+        const otherMenu = document.getElementById(type === 'source' ? 'targetMenu' : 'sourceMenu');
+        
+        // Close other menu
+        otherMenu.classList.remove('active');
+        
+        // Toggle this menu
+        menu.classList.toggle('active');
+    }
 
-        sourceLogoImg.src = this.platformLogos[sourcePlatform];
-        targetLogoImg.src = this.platformLogos[targetPlatform];
+    closeAllMenus() {
+        document.getElementById('sourceMenu').classList.remove('active');
+        document.getElementById('targetMenu').classList.remove('active');
+    }
+
+    selectPlatform(type, platform) {
+        if (type === 'source') {
+            this.sourcePlatform = platform;
+            document.getElementById('sourceLogoImg').src = this.platformLogos[platform];
+        } else {
+            this.targetPlatform = platform;
+            document.getElementById('targetLogoImg').src = this.platformLogos[platform];
+        }
+        this.clearResult();
     }
 
     swapPlatforms() {
-        const sourcePlatform = document.getElementById('sourcePlatform');
-        const targetPlatform = document.getElementById('targetPlatform');
-
-        // Swap the selected values
-        const temp = sourcePlatform.value;
-        sourcePlatform.value = targetPlatform.value;
-        targetPlatform.value = temp;
+        // Swap platforms
+        const temp = this.sourcePlatform;
+        this.sourcePlatform = this.targetPlatform;
+        this.targetPlatform = temp;
 
         // Update logos
-        this.updateLogos();
+        document.getElementById('sourceLogoImg').src = this.platformLogos[this.sourcePlatform];
+        document.getElementById('targetLogoImg').src = this.platformLogos[this.targetPlatform];
+
         this.clearResult();
     }
 
     async convertLink() {
         const url = document.getElementById('musicUrl').value.trim();
-        const targetPlatform = document.getElementById('targetPlatform').value;
         
         if (!url) {
             this.showError('enter a link, dummy');
@@ -143,7 +179,7 @@ class MusicLinkConverter {
         this.clearResult();
 
         try {
-            const result = await this.fetchConvertedLink(url, targetPlatform);
+            const result = await this.fetchConvertedLink(url, this.targetPlatform);
             
             if (result.success) {
                 this.showSuccess(result.link, result.platform, result.confidence, result.track);

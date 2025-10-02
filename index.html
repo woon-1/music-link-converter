@@ -46,86 +46,138 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+        }
+
+        .logo-selector {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
         }
 
         .logo-display {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 20px;
+            border-radius: 24px;
+            border: 3px solid transparent;
             transition: all 0.3s ease;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .logo-selector:hover .logo-display {
+            border-color: #e0e0e0;
+            background: #fff;
         }
 
         .logo-display img {
-            width: 100%;
-            height: 100%;
+            width: 70px;
+            height: 70px;
             object-fit: contain;
         }
 
-        .platform-dropdown {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background: #f5f5f5;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 8px 28px 8px 12px;
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            color: #000;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .platform-dropdown:hover {
-            border-color: #000;
-            background: #fafafa;
-        }
-
-        .platform-dropdown:focus {
-            outline: none;
-            border-color: #000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .logo-dropdown::after {
-            content: '▼';
+        .dropdown-indicator {
             position: absolute;
-            bottom: 10px;
-            right: 8px;
-            pointer-events: none;
-            font-size: 8px;
-            color: #666;
+            bottom: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .logo-selector:hover .dropdown-indicator {
+            transform: scale(1.1);
+        }
+
+        .platform-menu {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 8px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 16px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .platform-menu.active {
+            display: flex;
+        }
+
+        .platform-option {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            background: #fafafa;
+            border: 2px solid transparent;
+        }
+
+        .platform-option:hover {
+            background: #f0f0f0;
+            border-color: #000;
+            transform: scale(1.05);
+        }
+
+        .platform-option img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
         }
 
         .arrows-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            gap: 2px;
             background: #f5f5f5;
             border-radius: 16px;
-            padding: 12px 14px;
+            padding: 8px 12px;
             border: 2px solid #e0e0e0;
             transition: all 0.3s ease;
             cursor: pointer;
-            font-size: 24px;
-            color: #000;
-            font-weight: 300;
         }
 
         .arrows-container:hover {
             border-color: #000;
             background: #fafafa;
-            transform: rotate(180deg);
         }
 
         .arrows-container:active {
-            transform: scale(0.95) rotate(180deg);
+            transform: scale(0.95);
+        }
+
+        .arrow-icon {
+            font-size: 20px;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        .arrow-icon.active {
+            color: #000;
+            font-weight: bold;
+        }
+
+        .arrow-icon.inactive {
+            color: #d0d0d0;
         }
 
         .input-section {
@@ -426,18 +478,33 @@
             }
 
             .logo-display {
-                width: 64px;
-                height: 64px;
+                width: 70px;
+                height: 70px;
             }
 
-            .platform-dropdown {
-                font-size: 11px;
-                padding: 6px 24px 6px 10px;
+            .logo-display img {
+                width: 56px;
+                height: 56px;
             }
 
-            .arrows-container {
-                font-size: 20px;
-                padding: 10px 12px;
+            .dropdown-indicator {
+                width: 20px;
+                height: 20px;
+                font-size: 8px;
+            }
+
+            .platform-option {
+                width: 48px;
+                height: 48px;
+            }
+
+            .platform-option img {
+                width: 36px;
+                height: 36px;
+            }
+
+            .arrow-icon {
+                font-size: 18px;
             }
             
             input[type="url"] {
@@ -464,18 +531,33 @@
             }
 
             .logo-display {
-                width: 56px;
-                height: 56px;
+                width: 64px;
+                height: 64px;
             }
 
-            .platform-dropdown {
-                font-size: 10px;
-                padding: 6px 22px 6px 8px;
+            .logo-display img {
+                width: 50px;
+                height: 50px;
             }
 
-            .arrows-container {
-                font-size: 18px;
-                padding: 10px 11px;
+            .dropdown-indicator {
+                width: 18px;
+                height: 18px;
+                font-size: 7px;
+            }
+
+            .platform-option {
+                width: 44px;
+                height: 44px;
+            }
+
+            .platform-option img {
+                width: 32px;
+                height: 32px;
+            }
+
+            .arrow-icon {
+                font-size: 16px;
             }
         }
     </style>
@@ -483,32 +565,55 @@
 <body>
     <div class="container">
         <div class="platform-selector">
-            <div class="logo-dropdown">
-                <div class="logo-display" id="sourceLogo">
-                    <img src="/Spotify_icon.svg" alt="Spotify" id="sourceLogoImg">
+            <div class="logo-dropdown" id="sourceDropdown">
+                <div class="logo-selector" data-type="source">
+                    <div class="logo-display">
+                        <img src="/Spotify_icon.svg" alt="Spotify" id="sourceLogoImg">
+                        <div class="dropdown-indicator">▼</div>
+                    </div>
                 </div>
-                <select class="platform-dropdown" id="sourcePlatform">
-                    <option value="spotify" selected>Spotify</option>
-                    <option value="apple">Apple Music</option>
-                    <option value="youtube">YouTube</option>
-                    <option value="youtubeMusic">YouTube Music</option>
-                </select>
+                <div class="platform-menu" id="sourceMenu">
+                    <div class="platform-option" data-platform="spotify">
+                        <img src="/Spotify_icon.svg" alt="Spotify">
+                    </div>
+                    <div class="platform-option" data-platform="apple">
+                        <img src="/Apple_Music_icon.svg" alt="Apple Music">
+                    </div>
+                    <div class="platform-option" data-platform="youtube">
+                        <img src="/YouTube_icon.svg" alt="YouTube">
+                    </div>
+                    <div class="platform-option" data-platform="youtubeMusic">
+                        <img src="/YouTube_Music_icon.svg" alt="YouTube Music">
+                    </div>
+                </div>
             </div>
             
-            <div class="arrows-container" id="directionToggle" role="button" tabindex="0" aria-label="Swap platforms">
-                →
+            <div class="arrows-container" id="directionToggle" role="button" tabindex="0" aria-label="Toggle conversion direction">
+                <div class="arrow-icon active" id="rightArrow">→</div>
+                <div class="arrow-icon inactive" id="leftArrow">←</div>
             </div>
             
-            <div class="logo-dropdown">
-                <div class="logo-display" id="targetLogo">
-                    <img src="/Apple_Music_icon.svg" alt="Apple Music" id="targetLogoImg">
+            <div class="logo-dropdown" id="targetDropdown">
+                <div class="logo-selector" data-type="target">
+                    <div class="logo-display">
+                        <img src="/Apple_Music_icon.svg" alt="Apple Music" id="targetLogoImg">
+                        <div class="dropdown-indicator">▼</div>
+                    </div>
                 </div>
-                <select class="platform-dropdown" id="targetPlatform">
-                    <option value="spotify">Spotify</option>
-                    <option value="apple" selected>Apple Music</option>
-                    <option value="youtube">YouTube</option>
-                    <option value="youtubeMusic">YouTube Music</option>
-                </select>
+                <div class="platform-menu" id="targetMenu">
+                    <div class="platform-option" data-platform="spotify">
+                        <img src="/Spotify_icon.svg" alt="Spotify">
+                    </div>
+                    <div class="platform-option" data-platform="apple">
+                        <img src="/Apple_Music_icon.svg" alt="Apple Music">
+                    </div>
+                    <div class="platform-option" data-platform="youtube">
+                        <img src="/YouTube_icon.svg" alt="YouTube">
+                    </div>
+                    <div class="platform-option" data-platform="youtubeMusic">
+                        <img src="/YouTube_Music_icon.svg" alt="YouTube Music">
+                    </div>
+                </div>
             </div>
         </div>
         
