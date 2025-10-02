@@ -3,6 +3,7 @@ class MusicLinkConverter {
     constructor() {
         this.currentPlatform = 'apple'; // Default: Spotify → Apple Music
         this.initializeEventListeners();
+        this.updatePlaceholder(); // Set initial placeholder
     }
 
     initializeEventListeners() {
@@ -12,6 +13,7 @@ class MusicLinkConverter {
                 document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.currentPlatform = e.target.dataset.platform;
+                this.updatePlaceholder();
                 this.clearResult();
             });
         });
@@ -135,6 +137,17 @@ class MusicLinkConverter {
         resultLink.href = '#';
         resultLink.textContent = '';
         result.style.display = 'block';
+    }
+
+    updatePlaceholder() {
+        const input = document.getElementById('musicUrl');
+        if (this.currentPlatform === 'apple') {
+            // Spotify → Apple Music
+            input.placeholder = 'https://open.spotify.com/track/...';
+        } else {
+            // Apple Music → Spotify
+            input.placeholder = 'https://music.apple.com/us/song/...';
+        }
     }
 
     clearResult() {
