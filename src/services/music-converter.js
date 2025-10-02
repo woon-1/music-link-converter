@@ -2,12 +2,14 @@
 import SpotifyAPI from './spotify-api.js';
 import AppleMusicAPI from './apple-music-api.js';
 import YouTubeAPI from './youtube-api.js';
+import AmazonMusicAPI from './amazon-music-api.js';
 
 class MusicConverter {
     constructor() {
         this.spotify = new SpotifyAPI();
         this.appleMusic = new AppleMusicAPI();
         this.youtube = new YouTubeAPI();
+        this.amazon = new AmazonMusicAPI();
     }
 
     // Normalize track data for comparison
@@ -39,6 +41,15 @@ class MusicConverter {
                 duration: YouTubeAPI.parseDuration(track.contentDetails?.duration || 'PT0S'),
                 platform: platform,
                 id: track.id
+            };
+        } else if (platform === 'amazon') {
+            return {
+                title: track.name || track.title,
+                artist: track.artists?.[0]?.name || track.artist,
+                album: track.album?.name || track.albumName,
+                duration: track.durationMs || track.duration,
+                platform: 'amazon',
+                id: track.id || track.asin
             };
         }
         return null;
@@ -406,6 +417,192 @@ class MusicConverter {
         }
     }
 
+    // Convert to Amazon Music from any platform
+    async convertToAmazon(sourceUrl, sourcePlatform) {
+        try {
+            let searchQuery = '';
+            let sourceTrack = null;
+
+            // Get track info from source
+            if (sourcePlatform === 'spotify') {
+                const trackId = SpotifyAPI.extractTrackId(sourceUrl);
+                const spotifyTrack = await this.spotify.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(spotifyTrack, 'spotify');
+            } else if (sourcePlatform === 'apple') {
+                const trackId = AppleMusicAPI.extractTrackId(sourceUrl);
+                const appleTrack = await this.appleMusic.getTrack(trackId);
+                sourceTrack = this.normalizeTrackData(appleTrack, 'apple');
+            } else if (sourcePlatform === 'youtube' || sourcePlatform === 'youtubeMusic') {
+                const videoId = YouTubeAPI.extractVideoId(sourceUrl);
+                const youtubeVideo = await this.youtube.getVideo(videoId);
+                sourceTrack = this.normalizeTrackData(youtubeVideo, sourcePlatform);
+            }
+
+            searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            const amazonResults = await this.amazon.searchTracks(searchQuery, 20);
+
+            if (amazonResults.length === 0) {
+                throw new Error('No matching track found on Amazon Music');
+            }
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const amazonTrack of amazonResults) {
+                const normalized = this.normalizeTrackData(amazonTrack, 'amazon');
+                const score = this.calculateSimilarity(sourceTrack, normalized);
+                
+                if (score > bestScore && score > 60) {
+                    bestScore = score;
+                    bestMatch = amazonTrack;
+                }
+            }
+
+            if (!bestMatch) {
+                throw new Error('No sufficiently similar track found on Amazon Music');
+            }
+
+            const amazonUrl = AmazonMusicAPI.generateUrl(bestMatch.id || bestMatch.asin);
+
+            return {
+                success: true,
+                originalUrl: sourceUrl,
+                convertedUrl: amazonUrl,
+                originalPlatform: sourcePlatform,
+                targetPlatform: 'Amazon Music',
+                confidence: bestScore,
+                track: {
+                    title: sourceTrack.title,
+                    artist: sourceTrack.artist,
+                    album: sourceTrack.album
+                }
+            };
+
+        } catch (error) {
+            console.error('Convert to Amazon Music error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Convert from Amazon Music to other platforms
+    async convertFromAmazon(amazonUrl, targetPlatform) {
+        try {
+            const trackId = AmazonMusicAPI.extractTrackId(amazonUrl);
+            const amazonTrack = await this.amazon.getTrack(trackId);
+            const sourceTrack = this.normalizeTrackData(amazonTrack, 'amazon');
+
+            const searchQuery = `${sourceTrack.artist} ${sourceTrack.title}`;
+            let targetResults = [];
+            let bestMatch = null;
+            let bestScore = 0;
+
+            if (targetPlatform === 'spotify') {
+                targetResults = await this.spotify.searchTracks(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'spotify');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Spotify');
+                }
+
+                return {
+                    success: true,
+                    originalUrl: amazonUrl,
+                    convertedUrl: SpotifyAPI.generateUrl(bestMatch.id),
+                    originalPlatform: 'Amazon Music',
+                    targetPlatform: 'Spotify',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'apple') {
+                targetResults = await this.appleMusic.searchSongs(searchQuery, 20);
+                
+                for (const track of targetResults) {
+                    const normalized = this.normalizeTrackData(track, 'apple');
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = track;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error('No sufficiently similar track found on Apple Music');
+                }
+
+                const albumId = bestMatch.attributes?.albumId || bestMatch.relationships?.albums?.data?.[0]?.id;
+                return {
+                    success: true,
+                    originalUrl: amazonUrl,
+                    convertedUrl: AppleMusicAPI.generateUrlWithAlbum(bestMatch.id, albumId, 'us'),
+                    originalPlatform: 'Amazon Music',
+                    targetPlatform: 'Apple Music',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+
+            } else if (targetPlatform === 'youtube' || targetPlatform === 'youtubeMusic') {
+                targetResults = await this.youtube.searchVideos(searchQuery, 20);
+                
+                for (const video of targetResults) {
+                    const normalized = this.normalizeTrackData(video, targetPlatform);
+                    const score = this.calculateSimilarity(sourceTrack, normalized);
+                    
+                    if (score > bestScore && score > 60) {
+                        bestScore = score;
+                        bestMatch = video;
+                    }
+                }
+
+                if (!bestMatch) {
+                    throw new Error(`No sufficiently similar track found on ${targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube'}`);
+                }
+
+                return {
+                    success: true,
+                    originalUrl: amazonUrl,
+                    convertedUrl: YouTubeAPI.generateUrl(bestMatch.id, targetPlatform === 'youtubeMusic'),
+                    originalPlatform: 'Amazon Music',
+                    targetPlatform: targetPlatform === 'youtubeMusic' ? 'YouTube Music' : 'YouTube',
+                    confidence: bestScore,
+                    track: {
+                        title: sourceTrack.title,
+                        artist: sourceTrack.artist,
+                        album: sourceTrack.album
+                    }
+                };
+            }
+
+        } catch (error) {
+            console.error('Convert from Amazon Music error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
     // Main conversion method
     async convert(url, targetPlatform) {
         try {
@@ -418,6 +615,16 @@ class MusicConverter {
 
             if (sourcePlatform === targetPlatform) {
                 throw new Error('Source and target platforms are the same');
+            }
+
+            // Handle conversions TO Amazon Music
+            if (targetPlatform === 'amazon') {
+                return await this.convertToAmazon(url, sourcePlatform);
+            }
+
+            // Handle conversions FROM Amazon Music
+            if (sourcePlatform === 'amazon') {
+                return await this.convertFromAmazon(url, targetPlatform);
             }
 
             // Handle conversions TO YouTube or YouTube Music
@@ -459,6 +666,8 @@ class MusicConverter {
             return 'youtubeMusic';
         } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
             return 'youtube';
+        } else if (url.includes('music.amazon.com') || url.includes('amazon.com/music')) {
+            return 'amazon';
         }
         return null;
     }
