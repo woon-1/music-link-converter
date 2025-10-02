@@ -39,6 +39,8 @@
             gap: 20px;
             margin-bottom: 50px;
             padding: 30px 20px;
+            position: relative;
+            z-index: 50;
         }
 
         .logo-dropdown {
@@ -47,6 +49,7 @@
             flex-direction: column;
             align-items: center;
             transform: translateZ(0);
+            z-index: 100;
         }
 
         .logo-selector {
@@ -88,10 +91,12 @@
             transition: transform 0.3s ease;
             pointer-events: none;
             will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         .logo-selector:hover .dropdown-indicator {
-            transform: translateY(2px);
+            transform: translateY(2px) translateZ(0);
         }
 
         .platform-menu {
