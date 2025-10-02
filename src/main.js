@@ -31,9 +31,29 @@ class MusicLinkConverter {
         // Input field changes
         const musicUrl = document.getElementById('musicUrl');
         const clearBtn = document.getElementById('clearBtn');
+        const inputWrapper = document.querySelector('.input-wrapper');
+
+        const checkOverflow = () => {
+            // Check if text is overflowing
+            const isOverflowing = musicUrl.scrollWidth > musicUrl.clientWidth;
+            if (isOverflowing) {
+                inputWrapper.classList.add('has-overflow');
+            } else {
+                inputWrapper.classList.remove('has-overflow');
+            }
+        };
 
         musicUrl.addEventListener('input', () => {
             clearBtn.style.display = musicUrl.value ? 'block' : 'none';
+            checkOverflow();
+        });
+
+        musicUrl.addEventListener('blur', () => {
+            checkOverflow();
+        });
+
+        musicUrl.addEventListener('focus', () => {
+            checkOverflow();
         });
 
         // Enter key support
@@ -47,6 +67,7 @@ class MusicLinkConverter {
         clearBtn.addEventListener('click', () => {
             musicUrl.value = '';
             clearBtn.style.display = 'none';
+            inputWrapper.classList.remove('has-overflow');
             musicUrl.focus();
             this.clearResult();
         });
