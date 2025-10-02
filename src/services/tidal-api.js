@@ -93,8 +93,7 @@ class TidalAPI {
             }
 
             const data = await response.json();
-            // v2 uses JSON:API format
-            return data.data || [];
+            return data.items || [];
 
         } catch (error) {
             console.error('Tidal search error:', error);
@@ -124,8 +123,7 @@ class TidalAPI {
             }
 
             const data = await response.json();
-            // v2 uses JSON:API format
-            return data.data;
+            return data;
 
         } catch (error) {
             console.error('Tidal get track error:', error);

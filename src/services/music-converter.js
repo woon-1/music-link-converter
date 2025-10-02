@@ -54,12 +54,11 @@ class MusicConverter {
                 id: track.id || track.asin
             };
         } else if (platform === 'tidal') {
-            // v2 uses JSON:API format
             return {
-                title: track.attributes?.title || track.title,
-                artist: track.attributes?.artist?.name || track.artist?.name || track.artists?.[0]?.name,
-                album: track.attributes?.album?.title || track.album?.title || track.album?.name,
-                duration: track.attributes?.duration ? track.attributes.duration * 1000 : (track.duration ? track.duration * 1000 : null),
+                title: track.title || track.name,
+                artist: track.artist?.name || track.artists?.[0]?.name || track.artist,
+                album: track.album?.title || track.album?.name || track.albumName,
+                duration: track.duration ? track.duration * 1000 : track.durationMs,
                 platform: 'tidal',
                 id: track.id
             };
