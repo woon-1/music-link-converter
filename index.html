@@ -46,12 +46,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transform: translateZ(0);
         }
 
         .logo-selector {
             cursor: pointer;
             position: relative;
-            transition: all 0.3s ease;
+            transition: border-color 0.3s ease;
         }
 
         .logo-display {
@@ -75,6 +76,7 @@
             width: 70px;
             height: 70px;
             object-fit: contain;
+            display: block;
         }
 
         .dropdown-indicator {
@@ -83,8 +85,9 @@
             right: -6px;
             font-size: 12px;
             color: #000;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
             pointer-events: none;
+            will-change: transform;
         }
 
         .logo-selector:hover .dropdown-indicator {
