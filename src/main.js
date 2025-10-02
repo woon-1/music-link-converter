@@ -3,17 +3,20 @@ class MusicLinkConverter {
     constructor() {
         this.currentPlatform = 'apple'; // Default: Spotify → Apple Music
         this.initializeEventListeners();
-        this.updatePlaceholder(); // Set initial placeholder
+        this.updateUI(); // Set initial UI state
     }
 
     initializeEventListeners() {
         // Platform selector buttons
         document.querySelectorAll('.platform-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                const button = e.target.closest('.platform-btn');
+                if (!button) return;
+                
                 document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.currentPlatform = e.target.dataset.platform;
-                this.updatePlaceholder();
+                button.classList.add('active');
+                this.currentPlatform = button.dataset.platform;
+                this.updateUI();
                 this.clearResult();
             });
         });
@@ -111,17 +114,12 @@ class MusicLinkConverter {
         
         result.className = 'result success';
         
-        let confidenceText = '';
-        if (confidence) {
-            confidenceText = ` (${Math.round(confidence)}% match)`;
-        }
-        
         let trackInfo = '';
         if (track) {
-            trackInfo = `\n🎵 ${track.title} by ${track.artist}`;
+            trackInfo = `🎵 ${track.title} - ${track.artist}\n`;
         }
         
-        resultText.textContent = `✅ Successfully converted to ${platform}${confidenceText}${trackInfo}`;
+        resultText.textContent = `${trackInfo}✓ Link ready`;
         resultLink.href = link;
         resultLink.textContent = link;
         result.style.display = 'block';
@@ -133,20 +131,31 @@ class MusicLinkConverter {
         const resultLink = document.getElementById('resultLink');
         
         result.className = 'result error';
-        resultText.textContent = `❌ ${message}`;
+        resultText.textContent = `✗ ${message}`;
         resultLink.href = '#';
         resultLink.textContent = '';
         result.style.display = 'block';
     }
 
-    updatePlaceholder() {
+    updateUI() {
         const input = document.getElementById('musicUrl');
+        const sourceLogo = document.getElementById('sourceLogo').querySelector('img');
+        const targetLogo = document.getElementById('targetLogo').querySelector('img');
+        
         if (this.currentPlatform === 'apple') {
             // Spotify → Apple Music
-            input.placeholder = 'https://open.spotify.com/track/...';
+            input.placeholder = 'Paste link here...';
+            sourceLogo.src = '/Spotify_icon.svg';
+            sourceLogo.alt = 'Spotify';
+            targetLogo.src = '/Apple_Music_icon.svg';
+            targetLogo.alt = 'Apple Music';
         } else {
             // Apple Music → Spotify
-            input.placeholder = 'https://music.apple.com/us/song/...';
+            input.placeholder = 'Paste link here...';
+            sourceLogo.src = '/Apple_Music_icon.svg';
+            sourceLogo.alt = 'Apple Music';
+            targetLogo.src = '/Spotify_icon.svg';
+            targetLogo.alt = 'Spotify';
         }
     }
 
