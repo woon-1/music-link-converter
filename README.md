@@ -1,38 +1,47 @@
-# 🎵 Music Link Converter
+# 🎵 musiclinkr Mobile
 
-Convert music links between Spotify and Apple Music seamlessly.
+Convert music links between multiple streaming platforms on your iOS device.
 
 ## 🚀 Features
 
-- **Spotify → Apple Music** conversion
-- **Apple Music → Spotify** conversion
-- Clean, modern web interface
-- Real-time link validation
-- Mobile responsive design
+- **Multi-platform conversion** between 7 major music services:
+  - Spotify ↔ Apple Music
+  - YouTube ↔ YouTube Music
+  - Amazon Music, Tidal, SoundCloud
+- **Native iOS app** built with React Native + Expo
+- **Clean, intuitive interface** optimized for mobile
+- **Copy and share** converted links
+- **Open links directly** in music apps
+- **Bidirectional conversion** with arrow toggle
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Vanilla JavaScript + HTML/CSS
-- **Build Tool:** Vite
-- **Deployment:** Vercel (with serverless functions)
-- **APIs:** Spotify Web API + Apple Music API
+- **Framework:** React Native + Expo
+- **Language:** JavaScript (ES6+)
+- **APIs:** Spotify, Apple Music, YouTube, SoundCloud, SongLink
+- **Platform:** iOS (with Android support ready)
 
 ## 📋 Setup
 
-### 1. Install Dependencies
+See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed setup instructions.
+
+### Quick Start
+
+1. **Install Dependencies**
 ```bash
 npm install
 ```
 
-### 2. Development
+2. **Configure API Keys**
 ```bash
-npm run dev
+cp .env.example services/config.js
+# Edit services/config.js with your API keys
 ```
-Opens at `http://localhost:3000`
 
-### 3. Build
+3. **Run on iOS**
 ```bash
-npm run build
+npm start
+# Press 'i' to open in iOS Simulator
 ```
 
 ## 🔑 API Keys Setup
@@ -49,115 +58,107 @@ npm run build
 
 ### Apple Music API
 1. Go to [Apple Developer Portal](https://developer.apple.com/account/)
-2. Create a new app
-3. Enable MusicKit
-4. Get your **Team ID** and **Key ID**
-5. Generate a **Private Key**
-6. Add to environment variables:
-   ```
-   APPLE_MUSIC_TEAM_ID=your_team_id
-   APPLE_MUSIC_KEY_ID=your_key_id
-   APPLE_MUSIC_PRIVATE_KEY=your_private_key
-   ```
+2. Create a MusicKit identifier
+3. Get your **Team ID**, **Key ID**, and generate a **Private Key**
+4. Add to `services/config.js`
 
-## 🚀 Deployment
+### YouTube Data API
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable YouTube Data API v3
+3. Create an API key
+4. Add to `services/config.js`
 
-### Vercel (Recommended)
-1. Connect your GitHub repo to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically
+### SoundCloud API
+1. Go to [SoundCloud Developers](https://developers.soundcloud.com/)
+2. Register your app
+3. Get Client ID and Client Secret
+4. Add to `services/config.js`
 
-### Other Platforms
-- **Netlify:** Works with serverless functions
-- **Railway:** Good for Node.js apps
-- **Heroku:** Traditional deployment
+**Note:** Amazon Music and Tidal use the SongLink API (no additional keys needed)
+
+## 📦 Building for Production
+
+### iOS App Store Build
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Login to Expo
+eas login
+
+# Configure build
+eas build:configure
+
+# Build for iOS
+eas build --platform ios --profile production
+
+# Submit to App Store
+eas submit --platform ios
+```
 
 ## 📱 Usage
 
-1. **Select conversion direction:**
-   - Spotify → Apple Music
-   - Apple Music → Spotify
+1. **Select platforms** by tapping the platform icons
+2. **Toggle direction** using the arrow button
+3. **Paste a music link** from any supported platform
+4. **Tap the convert button** (flower icon)
+5. **Copy or open** the converted link
 
-2. **Paste your music link:**
-   - Spotify: `https://open.spotify.com/track/...`
-   - Apple Music: `https://music.apple.com/...`
+### Supported URL formats:
+- Spotify: `https://open.spotify.com/track/...`
+- Apple Music: `https://music.apple.com/.../song/...`
+- YouTube: `https://youtube.com/watch?v=...`
+- YouTube Music: `https://music.youtube.com/watch?v=...`
+- And more!
 
-3. **Click "Convert Link"**
-   - Get your converted link instantly!
+## 📁 Project Structure
 
-## 🔧 Implementation Status
-
-### ✅ Completed
-- [x] Project structure
-- [x] Frontend UI
-- [x] Basic URL parsing
-- [x] Mock conversion logic
-
-### 🚧 In Progress
-- [ ] Spotify API integration
-- [ ] Apple Music API integration
-- [ ] Real conversion logic
-- [ ] Error handling
-- [ ] Rate limiting
-
-### 📋 Todo
-- [ ] Caching system
-- [ ] Analytics
-- [ ] Mobile app (React Native)
-- [ ] Browser extension
-- [ ] API documentation
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm test
-
-# Test specific functionality
-node test.js
+```
+musiclinkr mobile/
+├── App.js                    # Main React Native component
+├── services/                 # API services
+│   ├── config.js            # API keys (gitignored)
+│   ├── music-converter.js   # Main conversion logic
+│   ├── spotify-api.js       # Spotify integration
+│   ├── apple-music-api.js   # Apple Music integration
+│   ├── youtube-api.js       # YouTube integration
+│   ├── soundcloud-api.js    # SoundCloud integration
+│   ├── songlink-api.js      # SongLink/Odesli API
+│   └── tidal-api.js         # Tidal integration
+├── app.json                 # Expo configuration
+├── package.json             # Dependencies
+└── babel.config.js          # Babel config
 ```
 
-## 📊 API Endpoints
+## 🎯 How It Works
 
-### POST `/api/converter`
-Convert a music link between platforms.
+1. **Platform Detection:** Automatically detects the source platform from the URL
+2. **Track Extraction:** Extracts track information using platform-specific APIs
+3. **Smart Matching:** Searches target platform and finds the best match based on:
+   - Song title similarity
+   - Artist name matching
+   - Album information
+   - Duration comparison
+4. **Link Generation:** Creates the appropriate URL for the target platform
 
-**Request:**
-```json
-{
-  "url": "https://open.spotify.com/track/...",
-  "targetPlatform": "apple"
-}
-```
+## ⚡ Performance
 
-**Response:**
-```json
-{
-  "success": true,
-  "link": "https://music.apple.com/...",
-  "platform": "apple",
-  "metadata": {
-    "platform": "spotify",
-    "trackId": "4iV5W9uYEdYUVa79Axb7Rh",
-    "type": "track"
-  }
-}
-```
+- Cached API tokens for faster conversions
+- Smart similarity scoring (60%+ threshold)
+- Fallback to SongLink API for difficult matches
+- Handles multiple URL formats per platform
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
 MIT License - see LICENSE file for details.
 
-## 🔗 Links
+## 🙏 Acknowledgments
 
-- **Live Demo:** [Coming Soon]
-- **API Docs:** [Coming Soon]
-- **GitHub:** [Your Repo URL]
+- Built with [Expo](https://expo.dev/)
+- Uses [SongLink API](https://odesli.co/) for certain conversions
+- Platform icons from official brand guidelines
